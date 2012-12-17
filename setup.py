@@ -73,7 +73,7 @@ if __name__ == '__main__':
             'console_scripts': [
                 'articles = swarm_articles.main:main'
                 ],
-            'articles.commands': [
+            'swarm_articles.commands': [
                 'crawl = swarm_articles.commands:Crawl',
                 ],
             },
