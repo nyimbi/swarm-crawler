@@ -1,11 +1,10 @@
 BREADABILITY_AVAILABLE = True
-
 try:
     from breadability.readable import Article, prep_article, check_siblings
-
 except ImportError:
     BREADABILITY_AVAILABLE = False
     Article = object
+
 
 from operator import attrgetter
 from werkzeug.utils import cached_property
@@ -16,8 +15,8 @@ from lxml.etree import tounicode, tostring
 
 
 class PageText(Article):
-    WHITESPACE = {' ':re.compile(r"\s+"),
-                  '':re.compile(r"\.+"),}
+    WHITESPACE = {' ':re.compile(r"[\s\r\n]+"),
+                  '':re.compile(r"\.{3,}"),}
     CANDIDATE_SEPARATOR = u'\r\n'
     def __init__(self, *args, **kwargs):
         if not BREADABILITY_AVAILABLE:
@@ -52,15 +51,15 @@ class PageText(Article):
                 if winner.node is not None:
                     yield winner.node
 
-    def winner(self, greedy=1):
+    def winner(self, greed=1):
         if not self.candidates:
             return u''
 
-        if isinstance(greedy, float):
-            if 0 > greedy > 1.0:
-                raise ValueError('greedy coeft should be integer or 0<x<1.0')
-            greedy = int(round(len(self.candidates)*greedy))
-        
+        if isinstance(greed, float):
+            if 0 > greed > 1.0:
+                raise ValueError('greed coeft should be integer or 0<x<1.0')
+            greed = int(round(len(self.candidates)*greed))
+
 
         return self.CANDIDATE_SEPARATOR.join((self.stripped(tounicode(node,
-                         method='text')) for node in self.slice(before=greedy)))
+                         method='text')) for node in self.slice(before=greed)))
