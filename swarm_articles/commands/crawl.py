@@ -1,8 +1,10 @@
 import logging
+import sys
+import os
 from pprint import pprint
 from argparse import Action
 from cliff.command import Command
-
+from cliff.lister import Lister
 
 class int_or_float(Action):
     def __call__(self, parser, args, value, option_string=None):
@@ -64,3 +66,53 @@ class Crawl(Command):
             print '>>'
 
         root_handler.handlers = handlers
+
+
+class Restore(Command):
+    "Restore saved process"
+    log = logging.getLogger(__name__)
+
+    def get_parser(self, prog_name):
+        parser = super(Restore, self).get_parser(prog_name)
+
+        parser.add_argument('id', help='Session id')
+        return parser
+
+    def take_action(self, parsed_args):
+        root_handler = logging.getLogger('')
+        handlers = root_handler.handlers
+        root_handler.handlers = []
+
+        for article in self.app.articles.restore(parsed_args.id):
+            print article.encode('utf-8')
+            print '>>'    
+        
+        root_handler.handlers = handlers
+
+
+class RestoreList(Lister):
+    "List saved processes"    
+    log = logging.getLogger(__name__)
+    HEADER = ('PID', 'Items', 'Tasks')
+    def take_action(self, parsed_args):
+        l = []
+
+        pending_path = self.app.articles.instance_dir('pending')
+        for pid in os.listdir(pending_path):
+            sublist = [pid,]
+            pidpath = os.path.join(pending_path, pid)
+            items = os.path.join(pidpath, 'items')
+            if os.path.exists(items):
+                sublist.append(len(os.listdir(items)))
+            else:
+                sublist.append(0)
+
+            tasks = os.path.join(pidpath, 'tasks')
+            if os.path.exists(tasks):
+                sublist.append(len(os.listdir(tasks)))
+            else:
+                sublist.append(0)
+            l.append(sublist)
+
+
+        return self.HEADER, l

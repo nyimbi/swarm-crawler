@@ -75,6 +75,8 @@ if __name__ == '__main__':
                 ],
             'swarm_articles.commands': [
                 'crawl = swarm_articles.commands:Crawl',
+                'restorelist = swarm_articles.commands:RestoreList',
+                'restore = swarm_articles.commands:Restore',
                 ],
             },
         classifiers=[

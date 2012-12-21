@@ -1,7 +1,7 @@
 
 import logging
 from pprint import pprint
-from urlparse import urlparse
+from urlparse import urlparse, urlunparse
 import re
 
 from werkzeug.datastructures import ImmutableDict
@@ -21,6 +21,7 @@ class ArticlesSwarm(HtmlSwarm):
                                                 '.png',
                                                 '.ico',
                                                 '.xml'],
+                        'SAVE_STATE':True,
                     })
 
 define_swarm.start()
@@ -35,8 +36,10 @@ def document_urls(html):
     for element, attribute, link, pos in html.iterlinks():
         if any((link.endswith(NON_DOCUMENT) for NON_DOCUMENT in swarm.object.config['NON_DOCUMENT_CONTENT'])):
             continue
-        yield link
-
+        if not '#' in link:
+            yield link
+        else:
+            yield urlunparse(urlparse(link)[:5] + ('',))
 
 def filter_domains(urls, domains=[]):
     for url in urls:
@@ -56,9 +59,6 @@ def filter_by_regexps(urls, regexps=[], allow=True):
             yield url
         elif not allow and not matches:
             yield url
-
-
-
 
 def crawl(  urls=[],
             greed=1,
