@@ -6,6 +6,9 @@ from argparse import Action
 from cliff.command import Command
 from cliff.lister import Lister
 
+from swarm.ext.articles.text import PageText
+from werkzeug.utils import import_string
+
 class int_or_float(Action):
     def __call__(self, parser, args, value, option_string=None):
         try:
@@ -15,6 +18,14 @@ class int_or_float(Action):
             if  val > 1.0 or val < 0.0:
                 raise ValueError('greed should be integer or 0 > greed > 1.0')
             setattr(args, self.dest, val)
+
+class import_object(Action):
+    def __call__(self, parser, args, value, option_string=None):
+        if isinstance(value, basestring):
+            setattr(args, self.dest, import_string(value))
+        else:
+            setattr(args, self.dest, value)
+
 
 class Crawl(Command):
     "Starts crawl process"
@@ -45,7 +56,12 @@ class Crawl(Command):
         parser.add_argument('--limit-domain',
                             nargs='*',
                             help='Limit crawled articles with domains. Dot started domains treated as domain name suffixes')
-        
+
+        parser.add_argument('--item-class',
+                            action=import_object,
+                            default=PageText,
+                            help='Item class. default: swarm.ext.articles.text.PageText')
+
         parser.add_argument('urls', nargs='+', help='Start from urls')
         return parser
 
@@ -54,7 +70,7 @@ class Crawl(Command):
         handlers = root_handler.handlers
         root_handler.handlers = []
 
-        for article in self.app.articles('/start',
+        for article in self.app.articles('/crawl',
                                           urls=parsed_args.urls,
                                           greed=parsed_args.greed,
                                           limit_domains=parsed_args.limit_domain,

@@ -6,6 +6,8 @@ import re
 
 from werkzeug.datastructures import ImmutableDict
 
+from swarm.app import obj_converter
+from swarm.config import ConfigAttribute
 from swarm import transport, swarm, define_swarm
 from swarm.ext.http import HtmlSwarm
 from swarm.ext.http.helpers import parser
@@ -22,7 +24,9 @@ class ArticlesSwarm(HtmlSwarm):
                                                 '.ico',
                                                 '.xml'],
                         'SAVE_STATE':True,
+                        'ITEM_CLASS':PageText
                     })
+    item_class = ConfigAttribute('ITEM_CLASS', get_converter=obj_converter)
 
 define_swarm.start()
 
@@ -65,10 +69,13 @@ def crawl(  urls=[],
             follow=True,
             allow_links=[],
             deny_links=[],
-            limit_domains=[],):
+            limit_domains=[],
+            item_class=None):
+    if item_class is None:
+        item_class = swarm.object.item_class
 
-    with swarm(*urls) << 'greed, limit_domains, follow, allow_links, deny_links':
-        yield PageText(transport.content,
+    with swarm(*urls) << 'greed, limit_domains, follow, allow_links, deny_links, item_class':
+        yield item_class(transport.content,
                        url=transport.url).winner(greed=greed)
         if not follow:
             return
@@ -81,15 +88,15 @@ def crawl(  urls=[],
         if deny_links:
             urls = filter_by_regexps(urls, deny_links, allow=False)
 
-        urls = list(set(urls))
-        crawl(urls=urls,
+        crawl(urls=list(set(urls)),
               greed=greed,
               limit_domains=limit_domains,
               follow=follow,
               allow_links=allow_links,
-              deny_links=deny_links)
+              deny_links=deny_links,
+              item_class=item_class)
 
-@articles.url('/start')
+@articles.url('/crawl')
 def start(datasource=None, **kwargs):    
     if datasource is None:
         crawl(**kwargs)
