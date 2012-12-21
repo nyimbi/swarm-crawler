@@ -49,8 +49,9 @@ class Crawl(Command):
 
     def take_action(self, parsed_args):
         root_handler = logging.getLogger('')
+        handlers = root_handler.handlers
         root_handler.handlers = []
-        
+
         for article in self.app.articles('/start',
                                           urls=parsed_args.urls,
                                           greed=parsed_args.greed,
@@ -61,3 +62,5 @@ class Crawl(Command):
                                           ):
             print article.encode('utf-8')
             print '>>'
+
+        root_handler.handlers = handlers
