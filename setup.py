@@ -69,6 +69,14 @@ if __name__ == '__main__':
                          'cliff',
                          ],
         tests_require=[],
+        entry_points={
+            'console_scripts': [
+                'articles = swarm_articles.main:main'
+                ],
+            'swarm_articles.commands': [
+                'crawl = swarm_articles.commands:Crawl',
+                ],
+            },
         classifiers=[
             'Development Status :: 2 - Pre-Alpha',
             'Programming Language :: Python',
