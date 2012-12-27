@@ -1,8 +1,8 @@
-
 import logging
 from pprint import pprint
 from urlparse import urlparse, urlunparse
 import re
+from collections import defaultdict
 
 from werkzeug.datastructures import ImmutableDict
 from werkzeug.utils import import_string
@@ -31,7 +31,6 @@ class ArticlesSwarm(HtmlSwarm):
                                         '.ico',
                                         '.xml'],
                         'SAVE_STATE':True,
-                        'ITEM_CLASS':PageText,
                         'DATASOURCES': {'no-content':'swarm.ext.articles.dataset.datasource.NoContentDatasource',
                                         'xpath-content-only':'swarm.ext.articles.dataset.datasource.XpathContentOnlyDatasource',
                                         'xpath':'swarm.ext.articles.dataset.datasource.XpathDatasource',
@@ -47,74 +46,42 @@ define_swarm.start()
 
 articles = ArticlesSwarm(__name__)
 
-@parser
-def document_urls(html):
-    if html is None:
-        return
-    html.make_links_absolute(transport.url)
-    for element, attribute, link, pos in html.iterlinks():
-        if any((link.endswith(NON_DOCUMENT) for NON_DOCUMENT in swarm.object.config['NON_DOCUMENT_CONTENT'])):
-            continue
-        if not '#' in link:
-            yield link
+def map_datasources(urls, dataset, default=None):
+    if dataset is None:
+        if default is not None:
+            return {default:urls}
         else:
-            yield urlunparse(urlparse(link)[:5] + ('',))
-
-def filter_domains(urls, domains=[]):
+            return {}
+    
+    _map = defaultdict(list)
+    
     for url in urls:
-        parsed = urlparse(url)
-        for domain in domains:
-            if domain.startswith('.') and parsed.hostname.endswith(domain[1:]):
-                yield url
-                break
-            elif parsed.hostname == domain:
-                yield url
-                break
+        ds_keys = dataset.prefixes(url)
+        if ds_keys:
+            datasource = dataset[ds_keys[-1]]
+        elif default:
+            datasource = default
+        else:
+            continue
+        _map[datasource].append(url)
+    return _map
 
-def filter_by_regexps(urls, regexps=[], allow=True):
-    for url in urls:
-        matches = any((re.match(regexp, url) for regexp in regexps))
-        if allow and matches:
-            yield url
-        elif not allow and not matches:
-            yield url
+define_swarm.start()
 
-def crawl(  urls=[],
-            greed=1,
-            follow=True,
-            allow_links=[],
-            deny_links=[],
-            limit_domains=[],
-            item_class=None):
+test = ArticlesSwarm(__name__)
 
-    if item_class is None:
-        item_class = swarm.object.item_class
+def crawl(urls, datasource, default=None):
+    with swarm(*urls) << 'datasource, default':
+        for item in datasource.items():
+            yield item
 
-    with swarm(*urls) << 'greed, limit_domains, follow, allow_links, deny_links, item_class':
-        yield item_class(transport.content,
-                       url=transport.url).winner(greed=greed)
-        if not follow:
-            return
-        urls = document_urls()
-        if limit_domains:
-            urls = filter_domains(urls, limit_domains)
-
-        if allow_links:
-            urls = filter_by_regexps(urls, allow_links)
-        if deny_links:
-            urls = filter_by_regexps(urls, deny_links, allow=False)
-
-        crawl(urls=list(set(urls)),
-              greed=greed,
-              limit_domains=limit_domains,
-              follow=follow,
-              allow_links=allow_links,
-              deny_links=deny_links,
-              item_class=item_class)
+        for datasource, urls in map_datasources(datasource.links(),
+                                                datasource.dataset,
+                                                default=default).items():
+            crawl(urls, datasource, default)
 
 @articles.url('/crawl')
-def start(datasource=None, **kwargs):    
-    if datasource is None:
-        crawl(**kwargs)
+def start(urls=[], datasource=None, default=None):
+    crawl(urls, datasource, default=default)
 
 define_swarm.finish()

@@ -16,4 +16,5 @@ def get_dataset(app, name):
         tree = Tree.load(_dataset)
     tree.save = save(_dataset).__get__(tree, tree.__class__)
     tree._path = _dataset
+    tree._name = name
     return tree

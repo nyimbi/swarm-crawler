@@ -32,8 +32,8 @@ class CommandManager(CommandManager):
     def find_command(self, argv):
         cmd = u' '.join(argv)
         try:
-            name = self.commands.longest_prefix(cmd)
-        except KeyError:
+            name = self.commands.prefixes(cmd)[-1]
+        except IndexError:
             raise ValueError('Invalid command %r' % cmd)
         ep = self.commands[name]
         factory = ep.load()

@@ -74,8 +74,10 @@ if __name__ == '__main__':
                 'articles = swarm_articles.main:main'
                 ],
             'swarm_articles.commands': [
-                'crawl = swarm_articles.commands.crawl:Crawl',
-                
+                'start_text = swarm_articles.commands.start:StartText',
+                'start = swarm_articles.commands.start:StartDataset',
+                'start_datasource = swarm_articles.commands.start:StartDatasource',
+
                 'restore_list = swarm_articles.commands.crawl:RestoreList',
                 'restore = swarm_articles.commands.crawl:Restore',
 

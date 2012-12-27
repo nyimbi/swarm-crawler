@@ -11,8 +11,6 @@ class NamedDatasourceParser(object):
         parser.add_argument('datasource', help='Datasource start url')
         return parser
 
-class ExtendedHelpDatasourceParser(ArgumentParser):
-    pass
 
 class CreateDatasource(NamedDatasourceParser, Command):
     """Create datasource"""
@@ -40,11 +38,12 @@ class CreateDatasource(NamedDatasourceParser, Command):
         kwargs = dict((key, getattr(args, key))\
                        for key in args.__dict__.keys()\
                        if not key in self.OMIT_DATASOURCE_ARGS)
-        
+
         dataset[datasource] = args.datasource_class(dataset._path, **kwargs)
         dataset.save()
-        
+
         self.app.log.info('Created "%s" datasource in "%s" dataset')
+
 
 class DeleteDatasource(NamedDatasourceParser, Command):
     """Delete datasource"""
