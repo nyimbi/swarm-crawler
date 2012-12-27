@@ -5,28 +5,43 @@ from urlparse import urlparse, urlunparse
 import re
 
 from werkzeug.datastructures import ImmutableDict
+from werkzeug.utils import import_string
 
-from swarm.app import obj_converter
+from swarm.helpers import obj_converter
 from swarm.config import ConfigAttribute
 from swarm import transport, swarm, define_swarm
 from swarm.ext.http import HtmlSwarm
 from swarm.ext.http.helpers import parser
 from swarm.ext.articles.text import PageText
 
+def dict_converter(dct):
+    d = {}
+    for key in dct:
+        d[key] = import_string(dct[key])
+    return d
+
 class ArticlesSwarm(HtmlSwarm):
     default_config = ImmutableDict(HtmlSwarm.default_config,
-                     **{'NON_DOCUMENT_CONTENT':['.gif',
-                                                '.jpeg',
-                                                '.jpg',
-                                                '.css',
-                                                '.js',
-                                                '.png',
-                                                '.ico',
-                                                '.xml'],
+                     **{'NON_CONTENT':[ '.gif',
+                                        '.jpeg',
+                                        '.jpg',
+                                        '.css',
+                                        '.js',
+                                        '.png',
+                                        '.ico',
+                                        '.xml'],
                         'SAVE_STATE':True,
-                        'ITEM_CLASS':PageText
+                        'ITEM_CLASS':PageText,
+                        'DATASOURCES': {'no-content':'swarm.ext.articles.dataset.datasource.NoContentDatasource',
+                                        'xpath-content-only':'swarm.ext.articles.dataset.datasource.XpathContentOnlyDatasource',
+                                        'xpath':'swarm.ext.articles.dataset.datasource.XpathDatasource',
+                                        'readable-content-only':'swarm.ext.articles.dataset.datasource.ReadableContentOnlyDatasource',
+                                        'readable':'swarm.ext.articles.dataset.datasource.ReadableDatasource'
+                                        }
                     })
+
     item_class = ConfigAttribute('ITEM_CLASS', get_converter=obj_converter)
+    datasources = ConfigAttribute('DATASOURCES', get_converter = dict_converter)
 
 define_swarm.start()
 
@@ -71,6 +86,7 @@ def crawl(  urls=[],
             deny_links=[],
             limit_domains=[],
             item_class=None):
+
     if item_class is None:
         item_class = swarm.object.item_class
 
