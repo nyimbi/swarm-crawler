@@ -1,4 +1,11 @@
 from datrie import Trie, State, Iterator
+class State(State):
+    def __unicode__(self):
+        return u"term:%s, leaf:%s, single: %s" % (
+            self.is_terminal(),
+            self.is_leaf(),
+            self.is_single(),
+        )
 
 class TrieTree(Trie):
     """Unordered tree"""
@@ -14,15 +21,23 @@ class TrieTree(Trie):
     def leafs(self, prefix):
         for suffix in self.suffixes(prefix):
             key = prefix + suffix
+
             state = State(self)
             state.walk(key)
-            if state.is_single():
+            # after deletion state not changed
+            # if state.is_single():
+            #     yield key
+            # so we are testing leaf with other method
+            if not any(self.suffixes(key)):
                 yield key
 
     def children(self, parent=u''):
+        if not isinstance(parent, unicode):
+            parent = unicode(parent)
         keys = []
         l = len(parent)
         for leaf in self.leafs(parent):
+            # print '>',leaf
             key = min((p for p in self.iter_prefixes(leaf) if len(p)>l),
                       key=len)
             if key and not key in keys:
