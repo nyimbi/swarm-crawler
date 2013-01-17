@@ -18,6 +18,11 @@ class DescribedMixin(object):
             if issubclass(base, DescribedMixin) and base.__doc__:
                 yield base.__doc__
 
+    @classmethod
+    def describe(cls):
+        return 'Extract ' + ' and '.join(cls.info())
+
+
 class Datasource(object):
     __OMIT = ('dataset',)
     def __getstate__(self):

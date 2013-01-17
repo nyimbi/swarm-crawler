@@ -74,6 +74,7 @@ if __name__ == '__main__':
                 'articles = swarm_articles.main:main'
                 ],
             'swarm_articles.commands': [
+                'serve = swarm_articles.commands.server:Web',
                 'start_text = swarm_articles.commands.start:StartText',
                 'start = swarm_articles.commands.start:StartDataset',
                 'start_datasource = swarm_articles.commands.start:StartDatasource',
