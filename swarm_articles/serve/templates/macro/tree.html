@@ -1,0 +1,11 @@
+{%- macro items(items)%}
+    <xul:treechildren {% if request.is_xhr %}xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"{% endif %} value="{{url_for('.path', path=items.path)}}">
+    {%- for name, item in items %}
+      <xul:treeitem container="{{item.is_container|lower}}"{%if- item.is_container%} onclick="if(!this.children){var item=this; ample.ajax({url:'{{url_for('.path', path=item.path)}}', dataType:'xml', async:false, success:function(data, status, xhr){$(item).append(ample.importNode(data.firstChild, true))}})}"{%- endif%}{% if item.view.popupset %} context="{{item.view.popupset}}"{% endif %}>
+        <xul:treerow>
+            <xul:treecell class="url" label="{{item.name}}"/>
+          </xul:treerow>
+      </xul:treeitem>      
+    {%- endfor %}
+    </xul:treechildren>
+{%- endmacro %}

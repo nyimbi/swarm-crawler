@@ -1,0 +1,41 @@
+{% extends 'xul/page.html'%}
+{% block styles %}
+  <style type="text/ample+css">
+    @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    xul|tree#dataset-tree {
+    }
+  </style>
+{% endblock %}
+{% block scripts %}
+{{g.tree.scripts|join('\n')|safe}}
+<script type='application/javascript'>
+ample.bind('load', function(event){$('#dataset-tree-box').attr('height', window.innerHeight-16)})
+window.onresize = function(event){$('#dataset-tree-box').attr('height', event.target.innerHeight-16)}
+</script>
+{% endblock %}
+{%- block popupset %}
+{%- for popupset in g.tree.popupsets %}
+{% include popupset with context %}
+{%- endfor %}
+<xul:tooltip id="moretip" orient="vertical" oneffectend="$('#tree-body').attr('tooltip', '')">
+    <xul:description value="Right click on object to see context actions"/>
+    <xul:description value="Right click on free space to create dataset"/>
+</xul:tooltip>
+{% endblock %}
+{%- block body %}
+<xul:hbox>
+    <xul:vbox id='dataset-tree-box' flex='1' align='stretch'>
+        <xul:tree flex='1'>
+            <xul:treecols>
+              <xul:treecol class='url' minwidth='300' id='url' primary='true' label='Name'/>
+            </xul:treecols>
+            <xul:treebody id='tree-body' {% if g.tree.root.view.popupset %} context="{{g.tree.root.view.popupset}}"{% endif %} onmouseenter="this.setAttribute('tooltip', 'moretip')">
+            {%- include template with context %}
+            </xul:treebody>
+        </xul:tree>
+    </xul:vbox>
+
+    <xul:vbox id='datasource-view-box'>
+    </xul:vbox>
+</xul:hbox>
+{%- endblock %}

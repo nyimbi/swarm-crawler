@@ -1,0 +1,2 @@
+{%- import 'macro/tree.html' as tree with context%}
+{{ tree.items(g.tree.root) }}

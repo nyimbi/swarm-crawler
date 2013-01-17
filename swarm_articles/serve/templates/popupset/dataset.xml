@@ -1,0 +1,4 @@
+  <xul:menupopup id="dataset-popupset">
+    <xul:menuitem label="Create datasource"/>
+    <xul:menuitem label="Delete dataset"/>
+  </xul:menupopup>

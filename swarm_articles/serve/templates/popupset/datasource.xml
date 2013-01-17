@@ -1,0 +1,5 @@
+  <xul:menupopup id="datasource-popupset">
+    <xul:menuitem label="Delete"/>
+    <xul:menuitem label="Delete subtree"/>
+    <xul:menuitem label="Change type"/>
+  </xul:menupopup>

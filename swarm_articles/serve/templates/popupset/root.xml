@@ -1,0 +1,3 @@
+  <xul:menupopup id="root-popupset">
+    <xul:menuitem label="Create dataset"/>
+  </xul:menupopup>
