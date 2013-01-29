@@ -1,16 +1,94 @@
 {% extends 'xul/page.html'%}
 {% block styles %}
   <style type="text/ample+css">
-    @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+/*    @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     xul|tree#dataset-tree {
     }
-  </style>
+*/  </style>
 {% endblock %}
 {% block scripts %}
 {{g.tree.scripts|join('\n')|safe}}
-<script type='application/javascript'>
-ample.bind('load', function(event){$('#dataset-tree-box').attr('height', window.innerHeight-16)})
-window.onresize = function(event){$('#dataset-tree-box').attr('height', event.target.innerHeight-16)}
+<script type="text/javascript" src="{{url_for('rest.static', filename='ample-rest.js')}}"></script>
+<script type='application/javascript'>ample.bind('load', function(event) {
+    $('#dataset-tree-box').attr('height', window.innerHeight - 16)
+})
+window.onresize = function(event) {
+    $('#dataset-tree-box').attr('height', event.target.innerHeight - 16)
+}
+
+function prompt_or_cancel(message) {
+    var value = prompt(message)
+    if(_.isNull(value)) throw 'cancel'
+    return value
+}
+function parent(node, name) {
+    if(node.__proto__.localName == name) {
+        return node
+    }
+    if(!node.parentNode) {
+        throw 'Not existent parent "' + name + '"'
+    }
+    return parent(node.parentNode, name)
+}
+
+function deletenode(node, data){
+    var selection = ample.rest.context.get(node);
+    var update_root = _.after(selection.length, function(item) {
+        ample.rest(item.parentNode).with("GET")
+    });
+    _.map(selection, function(item) {
+        item.setAttribute('open', false)
+        if(item.attributes.url) {
+            ample.ajax({
+                data:data || null,
+                url: item.attributes.url,
+                type: "DELETE",
+                complete: _.bind(update_root, {}, item)
+            })
+        }
+    })
+}
+var dataset = {
+    delete: function(menuitem) {
+        deletenode(menuitem, null)
+    },
+}
+var datasource = {
+    create:function(menuitem, type){
+        var selection = ample.rest.context.get(menuitem);
+        _.map(selection, function(item){
+            item.setAttribute('open', false)
+            ample
+            .rest(item.children)
+            .with("PUT", {type:type, name:function(){return prompt_or_cancel('Enter datasource name')}},
+                function(){item.setAttribute('open', true)})
+        })
+    return true
+    },
+    delete: function(menuitem) {
+        deletenode(menuitem, null)
+    },
+    deletetree: function(menuitem) {
+        deletenode(menuitem, {subnodes:true})
+    },
+    change_type: function(menuitem, type){
+        var selection = ample.rest.context.get(menuitem);
+        var update_root = _.after(selection.length, function(item) {
+            ample.rest(item.parentNode).with("GET")
+        });
+        _.map(selection, function(item) {
+            item.setAttribute('open', false)
+            if(item.attributes.url) {
+                ample.ajax({
+                    data:{typename:type},
+                    url: item.attributes.url,
+                    type: "POST",
+                    complete: _.bind(update_root, {}, item)
+                })
+            }
+        })
+    }
+}
 </script>
 {% endblock %}
 {%- block popupset %}
@@ -18,23 +96,25 @@ window.onresize = function(event){$('#dataset-tree-box').attr('height', event.ta
 {% include popupset with context %}
 {%- endfor %}
 <xul:tooltip id="moretip" orient="vertical" oneffectend="$('#tree-body').attr('tooltip', '')">
-    <xul:description value="Right click on object to see context actions"/>
+    <xul:description value="Right click on object for context actions"/>
     <xul:description value="Right click on free space to create dataset"/>
 </xul:tooltip>
 {% endblock %}
 {%- block body %}
 <xul:hbox>
     <xul:vbox id='dataset-tree-box' flex='1' align='stretch'>
-        <xul:tree flex='1'>
+        <xul:tree flex='2' id='tree'>
             <xul:treecols>
               <xul:treecol class='url' minwidth='300' id='url' primary='true' label='Name'/>
+              <xul:treecol class='url' minwidth='300' label='value'/>
             </xul:treecols>
-            <xul:treebody id='tree-body' {% if g.tree.root.view.popupset %} context="{{g.tree.root.view.popupset}}"{% endif %} onmouseenter="this.setAttribute('tooltip', 'moretip')">
+            <xul:treebody id='tree-body' {% if g.item.view.context %} context="{{g.item.view.context}}"{% endif %} onmouseenter="this.setAttribute('tooltip', 'moretip')">
             {%- include template with context %}
             </xul:treebody>
         </xul:tree>
+        <xul:hbox flex='1' id='dataset-view-box' hidden='true'>
+        </xul:hbox>
     </xul:vbox>
-
     <xul:vbox id='datasource-view-box'>
     </xul:vbox>
 </xul:hbox>

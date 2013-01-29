@@ -20,7 +20,7 @@ class DescribedMixin(object):
 
     @classmethod
     def describe(cls):
-        return 'Extract ' + ' and '.join(cls.info())
+        return 'Extracts ' + ' and '.join(cls.info())
 
 
 class Datasource(object):

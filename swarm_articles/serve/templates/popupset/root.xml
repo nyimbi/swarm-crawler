@@ -1,3 +1,2 @@
-  <xul:menupopup id="root-popupset">
-    <xul:menuitem label="Create dataset"/>
-  </xul:menupopup>
+  <xul:menupopup id="root-popupset" onpopupshowing="ample.rest.context.set(this, function(tree) {return tree})">
+   <xul:menuitem label="Create dataset" oncommand='ample.rest(ample.rest.context.get(this).body.children).with("PUT", {name:function(){return prompt_or_cancel("Enter dataset name")}})'/></xul:menupopup>
