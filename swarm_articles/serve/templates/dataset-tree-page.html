@@ -131,8 +131,9 @@ var datasource = {
     <xul:vbox id='dataset-tree-box' flex='1' align='stretch'>
         <xul:tree flex='2' id='tree'>
             <xul:treecols>
-              <xul:treecol class='url' minwidth='300' id='url' primary='true' label='Name'/>
-              <xul:treecol class='url' minwidth='300' label='value'/>
+              {% for id, label in zip(g.tree.cell_keys, g.tree.cell_labels)%}
+              <xul:treecol class='{{id}}-header' minwidth='300' id='{{id}}' primary='true' label='{{label}}'/>
+              {% endfor %}
             </xul:treecols>
             <xul:treebody id='tree-body' {% if g.item.view.context %} context="{{g.item.view.context}}"{% endif %} onmouseenter="this.setAttribute('tooltip', 'moretip')">
             {%- include template with context %}

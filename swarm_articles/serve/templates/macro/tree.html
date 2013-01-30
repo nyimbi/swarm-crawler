@@ -3,8 +3,9 @@
     {%- for name, item in items %}
       <xul:treeitem{% if item.is_container %} container="{{item.is_container|lower}}"{%- endif%}{% if item.view.context %} context="{{item.view.context}}"{% endif %} url="{{url_for('.path', path = item.path)}}" onclick="if(_.isUndefined(this._children)){ample.rest(this.children).with('GET'); this._children=true}">
         <xul:treerow>
-            <xul:treecell label="{{item.name}}"/>
-            <xul:treecell label="{% if item.obj.describe %}{{item.obj.describe()}}{% endif %}"/>
+            {%- for label in item.cell %}
+            <xul:treecell label="{{ label }}"/>
+            {%- endfor%}
         </xul:treerow>
         <xul:treechildren url="{{url_for('.path', path = item.path)}}"></xul:treechildren>
       </xul:treeitem>

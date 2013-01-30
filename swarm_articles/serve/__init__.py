@@ -47,9 +47,7 @@ datasets = rest(
 web.register_blueprint(datasets, url_prefix='/dataset')
 @web.context_processor
 def define_datasource_types():
-    return {'datasource_types':dict((name, ds.describe()) for (name, ds) in web.commands.articles.datasources.items()), 'type':type}
-
-
-@web.route('/test')
-def test():
-    return render_template('test.html')
+    return {'datasource_types':dict((name, ds.describe()) \
+                                    for (name, ds) \
+                                    in web.commands.articles.datasources.items()),
+            'zip':zip}

@@ -99,13 +99,19 @@ class TreeRootView(DictViewMixin, TreeRootView):
 class DatasetView(DictViewMixin, TreeView):
 
     __type__ = TrieTree
-    __headers__ = odict((('name', 'Name'), ))
+    __cell__ = odict((('name', 'Name'), ('info', 'Info')))
 
     def get_names(self):
         return self.obj.children()
 
     def get_child(self, name):
         return self.obj[name]
+
+    def get_cell(self, objname, name):
+        if name == 'name':
+            return objname
+        else:
+            return 'Dataset info'
 
     class view(NamedMethodView):
 
@@ -165,6 +171,12 @@ class DatasourceView(DatasetView):
             return self.dataset[name]
 
         return getattr(self.obj, name)
+
+    def get_cell(self, objname, name):
+        if name == 'name':
+            return objname
+        else:
+            return self.obj.describe()
 
     def delete_sub_items(self):
         for name, subitem in self:
