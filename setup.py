@@ -74,10 +74,23 @@ if __name__ == '__main__':
                 'articles = swarm_articles.main:main'
                 ],
             'swarm_articles.commands': [
-                'crawl = swarm_articles.commands:Crawl',
-                'restorelist = swarm_articles.commands:RestoreList',
-                'restore = swarm_articles.commands:Restore',
+                'serve = swarm_articles.commands.server:Web',
+                'start_text = swarm_articles.commands.start:StartText',
+                'start = swarm_articles.commands.start:StartDataset',
+                'start_datasource = swarm_articles.commands.start:StartDatasource',
+
+                'restore_list = swarm_articles.commands.crawl:RestoreList',
+                'restore = swarm_articles.commands.crawl:Restore',
+
+                'dataset_list = swarm_articles.commands.dataset:DatasetList',
+                'dataset_info = swarm_articles.commands.dataset:DatasetInfo',
+                'dataset_delete = swarm_articles.commands.dataset:DeleteDataset',
+                'dataset_backup = swarm_articles.commands.dataset:DatasetBackup',
+
+                'datasource_create = swarm_articles.commands.datasource:CreateDatasource',
+                'datasource_delete = swarm_articles.commands.datasource:DeleteDatasource',
                 ],
+
             },
         classifiers=[
             'Development Status :: 2 - Pre-Alpha',

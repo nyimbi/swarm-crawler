@@ -1,0 +1,9 @@
+  <xul:menupopup position="before_end" id="dataset-popupset" onpopupshowing="ample.rest.context.set(this, function(tree) {return parent(tree, 'tree').selectedItems})">
+    <xul:menu label='Create datasource'><xul:menupopup>
+        {%- for value, name in datasource_types.items() %}
+        <xul:menuitem label="{{name}}" oncommand='return datasource.create(this, "{{value}}")'/>
+        {%- endfor %}</xul:menupopup></xul:menu>
+    <xul:menuitem label="Delete dataset" oncommand='return dataset.delete(this)'/>
+    <xul:menuitem label="Rename dataset" oncommand='return dataset.rebase(this)'/>
+    <xul:menuitem label="Clone dataset" oncommand='return dataset.rebase(this, true)'/>
+  </xul:menupopup>

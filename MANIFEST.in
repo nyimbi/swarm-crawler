@@ -5,3 +5,4 @@ include setup.py
 graft docs
 graft example
 graft test
+graft static

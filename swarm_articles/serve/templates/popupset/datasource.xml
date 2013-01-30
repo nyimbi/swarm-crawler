@@ -1,0 +1,11 @@
+  <xul:menupopup id="datasource-popupset" onpopupshowing="ample.rest.context.set(this, function(tree) {return parent(tree, 'tree').selectedItems})">
+    <xul:menuitem label="Delete" oncommand="datasource.delete(this)"/>
+    <xul:menuitem label="Delete subtree" oncommand="datasource.deletetree(this)"/>
+    <xul:menu label='Change type'>
+        <xul:menupopup>
+            {%- for value, name in datasource_types.items() %}
+            <xul:menuitem label="{{name}}" oncommand='return datasource.change_type(this, "{{value}}")'/>
+            {%- endfor %}
+        </xul:menupopup>
+    </xul:menu>
+  </xul:menupopup>

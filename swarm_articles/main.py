@@ -1,7 +1,11 @@
 import logging
 import sys
 import os
+import string
 from argparse import Action
+
+
+from datrie import Trie
 
 from cliff.app import App
 from cliff.commandmanager import CommandManager
@@ -15,7 +19,26 @@ OPT_MODULES = {
     'cache':'swarm.ext.http.signal.cache',
 }
 
+class Unicode_Casting_Trie(Trie):
+    def __setitem__(self, name, value):
+        super(Unicode_Casting_Trie, self).__setitem__(unicode(name), value)
 
+class CommandManager(CommandManager):
+    def __init__(self, namespace):
+        self.commands = Unicode_Casting_Trie(string.printable)
+        self.namespace = namespace
+        self._load_commands()
+
+    def find_command(self, argv):
+        cmd = u' '.join(argv)
+        try:
+            name = self.commands.prefixes(cmd)[-1]
+        except IndexError:
+            raise ValueError('Invalid command %r' % cmd)
+        ep = self.commands[name]
+        factory = ep.load()
+        tail = [c for c in cmd[len(name):].split(u' ') if c]
+        return (factory, name, tail)
 
 class store_int(Action):
     def __call__(self, parser, args, value, option_string=None):

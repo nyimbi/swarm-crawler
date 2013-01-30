@@ -1,0 +1,14 @@
+{%- macro items(items, attributes={})%}
+    <xul:treechildren{% if request.is_xhr %} xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"{% endif %} url="{{url_for('.path', path=items.path)}}">
+    {%- for name, item in items %}
+      <xul:treeitem{% if item.is_container %} container="{{item.is_container|lower}}"{%- endif%}{% if item.view.context %} context="{{item.view.context}}"{% endif %} url="{{url_for('.path', path = item.path)}}" onclick="if(_.isUndefined(this._children)){ample.rest(this.children).with('GET'); this._children=true}"{%for attr_name, attr_value in attributes.items()%} {{attr_name}}='{{attr_value|safe}}'{%- endfor %} editor='{{url_for('editor.path', path = item.path)}}'>
+        <xul:treerow>
+            {%- for label in item.cell %}
+            <xul:treecell label="{{ label }}"/>
+            {%- endfor%}
+        </xul:treerow>
+        <xul:treechildren url="{{url_for('.path', path = item.path)}}"></xul:treechildren>
+      </xul:treeitem>
+    {%- endfor %}
+    </xul:treechildren>
+{%- endmacro %}
