@@ -4,5 +4,6 @@
         <xul:menuitem label="{{name}}" oncommand='return datasource.create(this, "{{value}}")'/>
         {%- endfor %}</xul:menupopup></xul:menu>
     <xul:menuitem label="Delete dataset" oncommand='return dataset.delete(this)'/>
-    <xul:menuitem label="Rename dataset" oncommand='return dataset.rename(this)'/>
+    <xul:menuitem label="Rename dataset" oncommand='return dataset.rebase(this)'/>
+    <xul:menuitem label="Clone dataset" oncommand='return dataset.rebase(this, true)'/>
   </xul:menupopup>

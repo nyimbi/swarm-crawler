@@ -1,6 +1,6 @@
 from os import path, listdir as ls, unlink
-from shutil import move
-from collections import OrderedDict as odict
+from shutil import move, copy
+from collections import OrderedDict as odict, Sequence
 import string
 
 from werkzeug.utils import cached_property
@@ -10,7 +10,7 @@ from base64 import urlsafe_b64encode as encodestring, \
 
 from werkzeug.routing import UnicodeConverter
 
-from flask import url_for, g, Response, request, current_app
+from flask import url_for, g, Response, request, current_app, render_template
 from flask.ext.introspect import Tree, TreeView, TreeRootView, \
     ObjectViewMixin, DictViewMixin
 
@@ -21,7 +21,7 @@ from swarm.ext.articles.dataset.tree import TrieTree
 from swarm.ext.articles.dataset.datasource import Datasource, ReadableDatasource
 from swarm.ext.articles.dataset import get_dataset
 
-from .namedview import NamedMethodView
+from .namedview import NamedMethodView, namedmethod
 
 
 class EmbeddedAssetsTree(Tree):
@@ -99,7 +99,7 @@ class TreeRootView(DictViewMixin, TreeRootView):
 class DatasetView(DictViewMixin, TreeView):
 
     __type__ = TrieTree
-    __cell__ = odict((('name', 'Name'), ('info', 'Info')))
+    
 
     def get_names(self):
         return self.obj.children()
@@ -141,12 +141,16 @@ class DatasetView(DictViewMixin, TreeView):
         def post(self, item):
             dataset = get_dataset(current_app.commands.articles, item.name)
             dataset_dir = path.abspath(path.dirname(dataset._path))
-            move(dataset._path, path.join(dataset_dir, request.values['name']))
+            if request.values['copy'] == u'true':
+                op = copy
+            else:
+                op = move
+            op(dataset._path, path.join(dataset_dir, request.values['name']))
             
             # g.item.obj = get_dataset(current_app.commands.articles,
             #                      request.values['name'])
             
-
+NOTEXTIST = object()
 
 class DatasourceView(DatasetView):
 
@@ -154,6 +158,7 @@ class DatasourceView(DatasetView):
     __recursive__ = True
     __converter__ = 'base64'
     __converters__ = {'base64': Base64Converter}
+    __cell__ = odict((('name', 'Name'), ('info', 'Info')))
 
     @cached_property
     def dataset(self):
@@ -163,14 +168,20 @@ class DatasourceView(DatasetView):
             return self.parent.dataset
 
     def get_names(self):
-        return self.dataset.children(self.name) \
-            + self.obj.__dict__.keys()
+        return list(set(self.dataset.children(self.name) \
+                            + self.obj.__dict__.keys()\
+                            + list(set(dir(type(self.obj))).intersection(set(self.view.editable_fields)))))
 
     def get_child(self, name):
         if isinstance(name, unicode) and name in self.dataset:
             return self.dataset[name]
+        child = self.obj.__dict__[name] \
+                if name in self.obj.__dict__ \
+                else getattr(type(self.obj), name)
 
-        return getattr(self.obj, name)
+        if child is None:
+            child = self.view.editable_fields[name]()
+        return child
 
     def get_cell(self, objname, name):
         if name == 'name':
@@ -183,13 +194,27 @@ class DatasourceView(DatasetView):
             subitem.delete_sub_items()
             del subitem.dataset[name]
 
-    class view(NamedMethodView):
 
+
+    class view(NamedMethodView):
         popupsets = ['popupset/datasource.xml']
         context = 'datasource-popupset'
+        editable_fields = {'allow_schemas':list,
+                           'deny_schemas':list,
+                           'allow_domains':list,
+                           'deny_domains':list,
+                           'allow_urls':list,
+                           'deny_urls':list,
+                           'unique':bool,
+                           'greed':int,
+                           'tags':list}
 
         def get(self, item):
             return ('tree/children.xml', {})
+
+        @namedmethod('editor', 'get')
+        def get_editor(self, item):
+            return ('tree/editor.xml', {})
 
         def delete(self, item):            
             if 'subnodes' in request.values:
@@ -209,3 +234,62 @@ class DatasourceView(DatasetView):
             # return ('tree/children.xml', {})
 
 
+class StringAttributeView(DatasourceView):
+    __type__ = basestring
+
+    class view(NamedMethodView):
+        @classmethod
+        def render(cls, name, view):
+            return render_template('fields/basestring.xml', view=view)
+
+        @namedmethod('editor', 'put')
+        def put(self, item):
+            setattr(item.parent.dataset[item.parent.name], item.name, request.values['value'])
+            item.parent.dataset.save(item.parent.obj.dataset_path)
+            item.obj = getattr(item.parent.dataset[item.parent.name], item.name)
+            return ('fields/basestring.xml', {'view':item, 'status':'OK!'})
+
+class StringSequenceAttributeView(DatasourceView):
+    __type__ = Sequence
+
+    class view(NamedMethodView):
+        @classmethod
+        def render(cls, name, view):
+            return render_template('fields/sequence.xml', view=view)
+
+        @namedmethod('editor', 'put')
+        def put(self, item):
+            n = int(request.values['n'])
+
+            datasource = item.parent.dataset[item.parent.name]
+            if not item.name in datasource.__dict__:
+                default = getattr(datasource.__class__, item.name)
+                if default is None:
+                    datasource.__dict__[item.name] = []
+                else:
+                    datasource.__dict__[item.name] = default
+
+            status = [None]*len(datasource.__dict__[item.name])
+            if len(datasource.__dict__[item.name])>n:
+                datasource.__dict__[item.name][n] = request.values['value']
+                status[n] = '#0cf00c'
+            else:
+                datasource.__dict__[item.name].append(request.values['value'])
+                status.append('#0cf00c')
+
+            item.parent.dataset.save(item.parent.obj.dataset_path)
+            item.obj = getattr(item.parent.dataset[item.parent.name], item.name)
+            return ('fields/sequence.xml', {'view':item, 'status':status})
+
+        @namedmethod('editor', 'delete')
+        def delete(self, item):
+            datasource = item.parent.dataset[item.parent.name]
+            if not item.name in datasource.__dict__:
+                return
+            n = int(request.values['n'])
+            if len(datasource.__dict__[item.name])<=n:
+                return
+
+            del datasource.__dict__[item.name][n]
+            item.parent.dataset.save(item.parent.obj.dataset_path)
+            return ('fields/sequence.xml', {'view':item})

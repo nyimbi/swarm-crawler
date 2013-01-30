@@ -11,6 +11,7 @@ class NamedMethod(object):
         self.method = method
         if self.http_method_name is None:
             self.http_method_name = method.__name__
+        self.http_method_name = self.http_method_name.lower()
         return self
 
 def namedmethod(name, http_method_name=None):
@@ -46,7 +47,7 @@ class NamedMethodViewBase(MethodView.__metaclass__):
         if methods:
             if not 'methods' in members:
                 members['methods'] = []
-            members['methods'].extend(methods)    
+            members['methods'].extend(methods)
         return super(NamedMethodViewBase, meta)\
                 .__new__(meta, name, bases, members)
 

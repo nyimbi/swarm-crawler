@@ -16,6 +16,10 @@ window.onresize = function(event) {
     $('#dataset-tree-box').attr('height', event.target.innerHeight - 16)
 }
 
+var rest = ample.restful('url', ample.restful.UPDATERS)
+var edit = ample.restful('editor', ample.restful.UPDATERS, {headers:{'X-View-Name':'editor'}})
+ample.rest = rest
+ample.edit = edit
 function prompt_or_cancel(message) {
     var value = prompt(message)
     if(_.isNull(value)) throw 'cancel'
@@ -34,7 +38,7 @@ function parent(node, name) {
 function deletenode(node, data){
     var selection = ample.rest.context.get(node);
     var update_root = _.after(selection.length, function(item) {
-        ample.rest(item.parentNode).with("GET")
+        rest(item.parentNode).with("GET")
     });
     _.map(selection, function(item) {
         item.setAttribute('open', false)
@@ -52,11 +56,13 @@ var dataset = {
     delete: function(menuitem) {
         deletenode(menuitem, null)
     },
-    rename: function(menuitem){
-        console.log('rename')
-        var selection = ample.rest.context.get(menuitem);
+    rebase: function(menuitem, copy){
+        if (_.isUndefined(copy)){
+            var copy = false
+        }
+        var selection = rest.context.get(menuitem);
         var update_root = _.after(selection.length, function(item) {
-            ample.rest(item.parentNode).with("GET")
+            rest(item.parentNode).with("GET")
         });
         _.map(selection, function(item) {
             $(item.parentNode.items).attr('open', false)
@@ -70,7 +76,7 @@ var dataset = {
             
             if(item.attributes.url) {
                 ample.ajax({
-                    data:{name:name},
+                    data:{name:name, copy:copy},
                     url: item.attributes.url,
                     type: "POST",
                     complete: _.bind(update_root, {}, item)
@@ -81,13 +87,13 @@ var dataset = {
 }
 var datasource = {
     create:function(menuitem, type){
-        var selection = ample.rest.context.get(menuitem);
+        var selection = rest.context.get(menuitem);
         _.map(selection, function(item){
-            item.setAttribute('open', false)
+            $(item.parentNode.items).attr('open', false)
             ample
             .rest(item.children)
             .with("PUT", {type:type, name:function(){return prompt_or_cancel('Enter datasource name')}},
-                function(){item.setAttribute('open', true)})
+                function(){$(item.parentNode.items).attr('open', true)})
         })
     return true
     },
@@ -98,9 +104,9 @@ var datasource = {
         deletenode(menuitem, {subnodes:true})
     },
     change_type: function(menuitem, type){
-        var selection = ample.rest.context.get(menuitem);
+        var selection = rest.context.get(menuitem);
         var update_root = _.after(selection.length, function(item) {
-            ample.rest(item.parentNode).with("GET")
+            rest(item.parentNode).with("GET")
         });
         _.map(selection, function(item) {
             $(item.parentNode.items).attr('open', false)
@@ -114,6 +120,9 @@ var datasource = {
             }
         })
     }
+}
+function show_editor(treeitem){
+    edit('#editor-box').using(treeitem).with('GET')
 }
 </script>
 {% endblock %}
@@ -132,7 +141,7 @@ var datasource = {
         <xul:tree flex='2' id='tree'>
             <xul:treecols>
               {% for id, label in zip(g.tree.cell_keys, g.tree.cell_labels)%}
-              <xul:treecol class='{{id}}-header' minwidth='300' id='{{id}}' primary='true' label='{{label}}'/>
+              <xul:treecol class='{{id}}-header' minwidth='450' id='{{id}}' primary='true' label='{{label}}'/>
               {% endfor %}
             </xul:treecols>
             <xul:treebody id='tree-body' {% if g.item.view.context %} context="{{g.item.view.context}}"{% endif %} onmouseenter="this.setAttribute('tooltip', 'moretip')">
@@ -142,7 +151,8 @@ var datasource = {
         <xul:hbox flex='1' id='dataset-view-box' hidden='true'>
         </xul:hbox>
     </xul:vbox>
-    <xul:vbox id='datasource-view-box'>
+    <xul:vbox flex='1'>
+        <xul:groupbox id='editor-box'></xul:groupbox>
     </xul:vbox>
 </xul:hbox>
 {%- endblock %}

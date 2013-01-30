@@ -25,6 +25,9 @@ class DescribedMixin(object):
 
 class Datasource(object):
     __OMIT = ('dataset',)
+    
+    tags = None
+    
     def __getstate__(self):
         return dict((k, v) for (k, v) in self.__dict__.items() \
                            if not k in self.__class__.__OMIT)

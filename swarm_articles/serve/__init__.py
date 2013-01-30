@@ -42,12 +42,30 @@ datasets = rest(
     roots=DatasetView,
     tree_class=EmbeddedAssetsTree,
     super_root_class=TreeRootView,
+    leaf_classes = (DatasourceView,)
+    )
+
+editor = rest(
+    'editor',
+    __name__,
+    get_objects,
+    template_base='editor-page.xml',
+    xhr_template_base='xml-fragment.xml',
+    roots=DatasetView,
+    # tree_class=EmbeddedAssetsTree,
+    super_root_class=TreeRootView,
+    leaf_classes = ()
     )
 
 web.register_blueprint(datasets, url_prefix='/dataset')
+web.register_blueprint(editor, url_prefix='/edit')
+
 @web.context_processor
 def define_datasource_types():
     return {'datasource_types':dict((name, ds.describe()) \
                                     for (name, ds) \
                                     in web.commands.articles.datasources.items()),
-            'zip':zip}
+            'zip':zip,
+            'getattr':getattr,
+            'hasattr':hasattr,
+            'enumerate':enumerate}

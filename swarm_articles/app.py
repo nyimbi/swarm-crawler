@@ -70,7 +70,7 @@ define_swarm.start()
 
 test = ArticlesSwarm(__name__)
 
-def crawl(urls, datasource, default=None):
+def crawl(urls, datasource, default='*'):
     with swarm(*urls) << 'datasource, default':
         for item in datasource.items():
             yield item
