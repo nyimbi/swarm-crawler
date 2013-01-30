@@ -1,4 +1,5 @@
 from os import path, listdir as ls, unlink
+from shutil import move
 from collections import OrderedDict as odict
 import string
 
@@ -12,12 +13,15 @@ from werkzeug.routing import UnicodeConverter
 from flask import url_for, g, Response, request, current_app
 from flask.ext.introspect import Tree, TreeView, TreeRootView, \
     ObjectViewMixin, DictViewMixin
-from flask.views import MethodView
+
+
 
 from swarm.ext.articles.dataset.tree import TrieTree
 
 from swarm.ext.articles.dataset.datasource import Datasource, ReadableDatasource
 from swarm.ext.articles.dataset import get_dataset
+
+from .namedview import NamedMethodView
 
 
 class EmbeddedAssetsTree(Tree):
@@ -72,7 +76,7 @@ SCRIPT = """<script type="text/javascript" src="%s"></script>"""
 
 class TreeRootView(DictViewMixin, TreeRootView):
 
-    class view(MethodView):
+    class view(NamedMethodView):
 
         popupsets = ['popupset/root.xml']
         context = 'root-popupset'
@@ -103,7 +107,7 @@ class DatasetView(DictViewMixin, TreeView):
     def get_child(self, name):
         return self.obj[name]
 
-    class view(MethodView):
+    class view(NamedMethodView):
 
         popupsets = ['popupset/dataset.xml']
         context = 'dataset-popupset'
@@ -127,6 +131,15 @@ class DatasetView(DictViewMixin, TreeView):
             unlink(path.join(item.parent.obj.dataset_dir, item.name))
             g.item = item.parent
             return ('tree/children.xml', {})
+
+        def post(self, item):
+            dataset = get_dataset(current_app.commands.articles, item.name)
+            dataset_dir = path.abspath(path.dirname(dataset._path))
+            move(dataset._path, path.join(dataset_dir, request.values['name']))
+            
+            # g.item.obj = get_dataset(current_app.commands.articles,
+            #                      request.values['name'])
+            
 
 
 class DatasourceView(DatasetView):
@@ -158,7 +171,7 @@ class DatasourceView(DatasetView):
             subitem.delete_sub_items()
             del subitem.dataset[name]
 
-    class view(MethodView):
+    class view(NamedMethodView):
 
         popupsets = ['popupset/datasource.xml']
         context = 'datasource-popupset'
@@ -171,7 +184,7 @@ class DatasourceView(DatasetView):
                 item.delete_sub_items()
             del item.dataset[item.name]    
             item.dataset.save(item.obj.dataset_path)
-            return ('tree/children.xml', {})
+            # return ('tree/children.xml', {})
 
         def post(self, item):
             newobj = current_app.commands.articles.\
@@ -181,6 +194,6 @@ class DatasourceView(DatasetView):
             item.dataset[item.name] = newobj
             item.dataset.save(item.obj.dataset_path)
 
-            return ('tree/children.xml', {})
+            # return ('tree/children.xml', {})
 
 
