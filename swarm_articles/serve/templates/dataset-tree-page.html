@@ -52,6 +52,32 @@ var dataset = {
     delete: function(menuitem) {
         deletenode(menuitem, null)
     },
+    rename: function(menuitem){
+        console.log('rename')
+        var selection = ample.rest.context.get(menuitem);
+        var update_root = _.after(selection.length, function(item) {
+            ample.rest(item.parentNode).with("GET")
+        });
+        _.map(selection, function(item) {
+            $(item.parentNode.items).attr('open', false)
+            try{
+                var name = prompt_or_cancel('Enter datset new name')    
+            }catch(err){
+                if (err=='cancel'){
+                    return
+                }
+            }
+            
+            if(item.attributes.url) {
+                ample.ajax({
+                    data:{name:name},
+                    url: item.attributes.url,
+                    type: "POST",
+                    complete: _.bind(update_root, {}, item)
+                })
+            }
+        })        
+    }
 }
 var datasource = {
     create:function(menuitem, type){
@@ -77,7 +103,7 @@ var datasource = {
             ample.rest(item.parentNode).with("GET")
         });
         _.map(selection, function(item) {
-            item.setAttribute('open', false)
+            $(item.parentNode.items).attr('open', false)
             if(item.attributes.url) {
                 ample.ajax({
                     data:{typename:type},
