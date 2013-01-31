@@ -315,3 +315,47 @@ class BooleanAttributeView(DatasourceView):
             item.obj = datasource.__dict__[item.name]
             item.parent.dataset.save(item.parent.obj.dataset_path)
             return ('fields/boolean.xml', {'view':item})
+
+
+class IntegerAttributeView(DatasourceView):
+    __type__ = int
+    class view(NamedMethodView):
+        @classmethod
+        def render(cls, name, view):
+            return render_template('fields/number.xml', view=view)
+        
+        @namedmethod('editor', 'put')
+        def put(self, item):
+            try:
+                setattr(item.parent.dataset[item.parent.name], item.name, int(request.values['value']))
+            except ValueError:
+                try:
+                    setattr(item.parent.dataset[item.parent.name], item.name, float(request.values['value']))
+                except ValueError:
+                    return ('fields/number.xml',
+                            {'view':item,
+                            'status':'Value "%s" is not number'%request.values['value']})
+
+            item.parent.dataset.save(item.parent.obj.dataset_path)
+            item.obj = getattr(item.parent.dataset[item.parent.name], item.name)
+            return ('fields/number.xml', {'view':item, 'status':'OK!'})
+
+class FloatAttributeView(DatasourceView):
+    __type__ = float
+    class view(NamedMethodView):
+        @classmethod
+        def render(cls, name, view):
+            return render_template('fields/number.xml', view=view)
+        
+        @namedmethod('editor', 'put')
+        def put(self, item):
+            try:
+                setattr(item.parent.dataset[item.parent.name], item.name, float(request.values['value']))
+            except ValueError:
+                return ('fields/number.xml',
+                        {'view':item,
+                        'status':'Value "%s" is not number'%request.values['value']})
+
+            item.parent.dataset.save(item.parent.obj.dataset_path)
+            item.obj = getattr(item.parent.dataset[item.parent.name], item.name)
+            return ('fields/number.xml', {'view':item, 'status':'OK!'})

@@ -1,0 +1,1 @@
+<xul:groupbox{% if request.is_xhr %} xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"{% endif %} editor='{{url_for('.path', path = view.path)}}'>{%block content%}{%endblock%}</xul:groupbox>
