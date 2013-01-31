@@ -1,4 +1,5 @@
-<xul:groupbox{% if request.is_xhr %} xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"{% endif %} editor='{{url_for('.path', path = view.path)}}'>
+{% extends 'field.html' %}
+{% block content%}
     <xul:hbox flex='1'>
         <xul:label flex='2' value='{{view.name}}' control='{{view.name}}-sequence'></xul:label>
         <xul:vbox id='{{view.name}}-sequence' flex='6'>
@@ -9,4 +10,4 @@
         {%- endfor %}
             <xul:hbox><xul:label value='{{view.obj|length + 1}}.' control='{{view.name}}-text-{{view.obj|length + 1}}'/><xul:textbox flex='10' onkeyup='if(event.keyIdentifier=="Enter"){ample.edit(this.parentNode.parentNode.parentNode.parentNode).with("PUT", {value:this.getAttribute("value"), n:"{{view.obj|length + 1}}"})}else{this.style.setProperty("background-color", "yellow")}' value='' placeholder='create new...' id='{{view.name}}-text-{{view.obj|length + 1}}'/></xul:hbox>
         </xul:vbox></xul:hbox>
-</xul:groupbox>
+{% endblock %}

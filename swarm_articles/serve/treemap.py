@@ -293,3 +293,25 @@ class StringSequenceAttributeView(DatasourceView):
             del datasource.__dict__[item.name][n]
             item.parent.dataset.save(item.parent.obj.dataset_path)
             return ('fields/sequence.xml', {'view':item})
+
+class BooleanAttributeView(DatasourceView):
+    __type__ = bool
+    class view(NamedMethodView):
+        @classmethod
+        def render(cls, name, view):
+            return render_template('fields/boolean.xml', view=view)
+
+        @namedmethod('editor', 'put')
+        def put(self, item):
+            datasource = item.parent.dataset[item.parent.name]
+            if not item.name in datasource.__dict__:
+                default = getattr(datasource.__class__, item.name)
+                if default is None:
+                    datasource.__dict__[item.name] = bool()
+                else:
+                    datasource.__dict__[item.name] = default
+            
+            datasource.__dict__[item.name] = not datasource.__dict__[item.name]
+            item.obj = datasource.__dict__[item.name]
+            item.parent.dataset.save(item.parent.obj.dataset_path)
+            return ('fields/boolean.xml', {'view':item})
