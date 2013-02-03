@@ -2,6 +2,7 @@ from string import printable
 import re
 from urlparse import urlunparse
 from itertools import chain, ifilter
+from fnmatch import fnmatch
 
 from werkzeug import cached_property
 
@@ -92,58 +93,48 @@ class LinksMixin(DescribedMixin):
                              'action':'store_false',
                              'help':'Disable following unique urls only'},
                 }
+    def fnmatch(self, value, matchers, ret):
+        if any((fnmatch(value, matcher) for matcher in matchers)):
+            return ret
+        return not ret
+
     def deny_scheme(self, url):
         if not self.deny_schemas:
             return True
         
-        if url.parsed.scheme in self.deny_schemas:
-            return False
-        
-        return True
+        return self.fnmatch(url.parsed.scheme, self.deny_schemas, False)
 
     def allow_scheme(self, url):
         if not self.allow_schemas:
             return True
         
-        if url.parsed.scheme in self.allow_schemas:
+        return self.fnmatch(url.parsed.scheme, self.allow_schemas, True)
+    
+    def deny_domain(self, url):
+        if not self.deny_domains:
             return True
-        
-        return False
+        return self.fnmatch(url.parsed.hostname, self.deny_domains, False)
 
     def allow_domain(self, url):
         if not self.allow_domains:
             return True
 
-        for dom in self.allow_domains:
-            if dom.startswith('.') and url.parsed.hostname.endswith(dom):
-                return True
-            elif url.parsed.hostname == dom:
-                return True
-
-        return False
-
-    def deny_domain(self, url):
-        if not self.deny_domains:
-            return True
-
-        for dom in self.deny_domains:
-            if dom.startswith('.') and url.parsed.hostname.endswith(dom):
-                return False
-            elif url.parsed.hostname == dom:
-                return False
-        return True
+        return self.fnmatch(url.parsed.hostname, self.allow_domains, True)
 
     def allow_url(self, url):
         if not self.allow_urls:
             return True
+        return self.fnmatch(urlunparse((None, None) + url.parsed[2:]),
+                            self.allow_urls,
+                            True)
 
-        return any((re.match(exp, url) for exp in self.allow_urls))
 
     def deny_url(self, url):
         if not self.deny_urls:
             return True
-
-        return not any((re.match(exp, url) for exp in self.deny_urls))
+        return self.fnmatch(urlunparse((None, None) + url.parsed[2:]),
+                            self.deny_urls,
+                            False)
 
     def drop_fragment(self, url):
         if not url.parsed.fragment:
