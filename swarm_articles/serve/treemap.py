@@ -145,8 +145,13 @@ class DatasetView(DictViewMixin, TreeView):
                 op = copy
             else:
                 op = move
+            new_path = path.join(dataset_dir, request.values['name'])
             op(dataset._path, path.join(dataset_dir, request.values['name']))
-            
+            dataset = get_dataset(current_app.commands.articles, request.values['name'])
+            for key in dataset.keys():
+                dataset[key]._path = new_path
+            dataset.save()
+
             # g.item.obj = get_dataset(current_app.commands.articles,
             #                      request.values['name'])
             
