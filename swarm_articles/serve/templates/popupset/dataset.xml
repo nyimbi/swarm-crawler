@@ -1,4 +1,4 @@
-  <xul:menupopup position="before_end" id="dataset-popupset" onpopupshowing="ample.rest.context.set(this, function(tree) {return parent(tree, 'tree').selectedItems})">
+  <xul:menupopup position="after_pointer" left="false" top="-1000" id="dataset-popupset" onpopupshowing="ample.rest.context.set(this, function(tree) {return parent(tree, 'tree').selectedItems})">
     <xul:menu label='Create datasource'><xul:menupopup position="before_end">
         {%- for value, name in datasource_types.items() %}
         <xul:menuitem label="{{name}}" oncommand='return datasource.create(this, "{{value}}")'/>

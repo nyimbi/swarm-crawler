@@ -8,7 +8,7 @@ from cliff.lister import Lister
 
 from werkzeug.utils import import_string
 
-from swarm.ext.articles.app import map_datasources
+from swarm.ext.articles.app import map_datasources, non_fnmatchers
 from swarm.ext.articles.dataset import get_dataset
 
 class int_or_float(Action):
@@ -23,48 +23,10 @@ class int_or_float(Action):
 
 
 class CrawlerMixin(object):
-    def crawl(self, urls, datasource, default):
+    def crawl(self, urls, datasource):
         for item in self.app.articles('/crawl', urls=urls,
-                                                datasource=datasource,
-                                                default=default):
+                                                datasource=datasource):
             yield item
-
-
-class StartText(CrawlerMixin, Command):
-    "Start crawl textual data (breadability)"
-    datasource_name = 'readable'
-    log = logging.getLogger(__name__)
-
-    def get_parser(self, prog_name):
-        parser = super(StartText, self).get_parser(prog_name)
-
-        parser.add_argument('urls', metavar='URL', nargs='+', help='Start from urls')
-        
-        parser.add_argument('--no-follow',
-                            default=True,
-                            action='store_false',
-                            dest='follow',
-                            help='Not follow links. Only texts for supplied urls will be restored')
-        self.app.articles.datasources[self.datasource_name].populate_parser(parser)
-        return parser
-
-    def take_action(self, args):
-        root_handler = logging.getLogger('')
-        handlers = root_handler.handlers
-        root_handler.handlers = []
-
-        if args.follow:
-            ds_class = self.app.articles.datasources[self.datasource_name]
-        else:
-            ds_class = self.app.articles.datasources[self.datasource_name+'-content-only']
-
-        datasource = ds_class(None, dataset=None, **args.__dict__)
-
-        for item in self.crawl(args.urls, datasource, datasource):
-            print item.encode('utf-8')
-            print '>>'
-
-        root_handler.handlers = handlers
 
 
 class StartDatasource(CrawlerMixin, Command):
@@ -102,8 +64,6 @@ class StartDataset(CrawlerMixin, Command):
     """Start crawl data with named dataset"""
     def get_parser(self, prog_name):
         parser = super(StartDataset, self).get_parser(prog_name)
-
-        parser.add_argument('--urls', metavar='URL', nargs='+', help='Start from urls')
         parser.add_argument('dataset', help='Use named dataset')
         return parser
 
@@ -112,13 +72,9 @@ class StartDataset(CrawlerMixin, Command):
         handlers = root_handler.handlers
         root_handler.handlers = []
         dataset = get_dataset(self.app.articles, args.dataset)
-        if args.urls:
-            urls = args.urls
-        else:
-            urls = dataset.keys()
-
-        for datasource, urls in map_datasources(urls, dataset, None).items():
-            for item in self.crawl(urls, datasource, None):
+        urls = non_fnmatchers(dataset)
+        for datasource, urls in map_datasources(urls, dataset).items():
+            for item in self.crawl(urls, datasource):
                 print item.encode('utf-8')
                 print '>>'
 
