@@ -1,4 +1,4 @@
-{% extends 'field.html' %}
+{% extends 'field.xml' %}
 {% block content%}
     <xul:hbox flex='1'>
         <xul:label flex='2' value='{{view.name}}' control='{{view.name}}-sequence'></xul:label>

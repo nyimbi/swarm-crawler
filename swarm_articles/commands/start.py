@@ -29,43 +29,6 @@ class CrawlerMixin(object):
             yield item
 
 
-class StartText(CrawlerMixin, Command):
-    "Start crawl textual data (breadability)"
-    datasource_name = 'readable'
-    log = logging.getLogger(__name__)
-
-    def get_parser(self, prog_name):
-        parser = super(StartText, self).get_parser(prog_name)
-
-        parser.add_argument('urls', metavar='URL', nargs='+', help='Start from urls')
-        
-        parser.add_argument('--no-follow',
-                            default=True,
-                            action='store_false',
-                            dest='follow',
-                            help='Not follow links. Only texts for supplied urls will be restored')
-        self.app.articles.datasources[self.datasource_name].populate_parser(parser)
-        return parser
-
-    def take_action(self, args):
-        root_handler = logging.getLogger('')
-        handlers = root_handler.handlers
-        root_handler.handlers = []
-
-        if args.follow:
-            ds_class = self.app.articles.datasources[self.datasource_name]
-        else:
-            ds_class = self.app.articles.datasources[self.datasource_name+'-content-only']
-
-        datasource = ds_class(None, dataset=None, **args.__dict__)
-
-        for item in self.crawl(args.urls, datasource, datasource):
-            print item.encode('utf-8')
-            print '>>'
-
-        root_handler.handlers = handlers
-
-
 class StartDatasource(CrawlerMixin, Command):
     """Start crawl data with defined datasource type"""
     def get_parser(self, prog_name):

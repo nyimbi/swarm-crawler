@@ -1,4 +1,4 @@
-{% extends 'field.html' %}
+{% extends 'field.xml' %}
 {% block content%}
 <xul:hbox{% if request.is_xhr %} xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"{% endif %} editor='{{url_for('.path', path = view.path)}}'>
     <xul:label flex='2' value='{{view.name}}' control='{{view.name}}-text'></xul:label>
