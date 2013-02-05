@@ -67,7 +67,15 @@ class LinksMixin(DescribedMixin):
     allow_domains = None
     deny_domains = None
     allow_urls = None
-    deny_urls = None
+    deny_urls = [ '*.gif',
+                  '*.jpeg',
+                  '*.jpg',
+                  '*.css',
+                  '*.js',
+                  '*.png',
+                  '*.ico',
+                  '*.xml'
+                  ]
     unique = True
 
     cmdopts = { 'allow_schemas':{'default':allow_schemas,
@@ -158,11 +166,6 @@ class LinksMixin(DescribedMixin):
         html.make_links_absolute(transport.url)
         for element, attribute, link, pos in html.iterlinks():
             url = URL(link)
-            if any((url.parsed.path.endswith(NON_CONTENT) \
-                    for NON_CONTENT \
-                    in swarm.object.config['NON_CONTENT'])):
-                continue
-            
             if not self.allowed(url):
                 continue
             

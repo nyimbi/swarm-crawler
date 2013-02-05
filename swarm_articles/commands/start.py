@@ -8,7 +8,7 @@ from cliff.lister import Lister
 
 from werkzeug.utils import import_string
 
-from swarm.ext.articles.app import map_datasources
+from swarm.ext.articles.app import map_datasources, non_fnmatchers
 from swarm.ext.articles.dataset import get_dataset
 
 class int_or_float(Action):
@@ -23,10 +23,9 @@ class int_or_float(Action):
 
 
 class CrawlerMixin(object):
-    def crawl(self, urls, datasource, default):
+    def crawl(self, urls, datasource):
         for item in self.app.articles('/crawl', urls=urls,
-                                                datasource=datasource,
-                                                default=default):
+                                                datasource=datasource):
             yield item
 
 
@@ -102,8 +101,6 @@ class StartDataset(CrawlerMixin, Command):
     """Start crawl data with named dataset"""
     def get_parser(self, prog_name):
         parser = super(StartDataset, self).get_parser(prog_name)
-
-        parser.add_argument('--urls', metavar='URL', nargs='+', help='Start from urls')
         parser.add_argument('dataset', help='Use named dataset')
         return parser
 
@@ -112,13 +109,9 @@ class StartDataset(CrawlerMixin, Command):
         handlers = root_handler.handlers
         root_handler.handlers = []
         dataset = get_dataset(self.app.articles, args.dataset)
-        if args.urls:
-            urls = args.urls
-        else:
-            urls = dataset.keys()
-
-        for datasource, urls in map_datasources(urls, dataset, None).items():
-            for item in self.crawl(urls, datasource, None):
+        urls = non_fnmatchers(dataset)
+        for datasource, urls in map_datasources(urls, dataset).items():
+            for item in self.crawl(urls, datasource):
                 print item.encode('utf-8')
                 print '>>'
 
