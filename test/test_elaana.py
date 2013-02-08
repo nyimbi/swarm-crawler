@@ -9,7 +9,7 @@ from swarm.ext.http import HtmlSwarm
 
 from swarm.ext.http.helpers import parser
 from swarm import transport, swarm, define_swarm
-from swarm.ext.articles.text import PageText
+from swarm_crawler.text import PageText
 
 from swarm.helpers import show_in_browser
 

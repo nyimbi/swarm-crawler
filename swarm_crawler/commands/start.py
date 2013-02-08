@@ -8,8 +8,8 @@ from cliff.lister import Lister
 
 from werkzeug.utils import import_string
 
-from swarm.ext.articles.app import map_datasources, non_fnmatchers
-from swarm.ext.articles.dataset import get_dataset
+from swarm.ext.crawler.app import map_datasources, non_fnmatchers
+from swarm.ext.crawler.dataset import get_dataset
 
 class int_or_float(Action):
     def __call__(self, parser, args, value, option_string=None):
@@ -24,7 +24,7 @@ class int_or_float(Action):
 
 class CrawlerMixin(object):
     def crawl(self, urls, datasource):
-        for item in self.app.articles('/crawl', urls=urls,
+        for item in self.app.crawler('/crawl', urls=urls,
                                                 datasource=datasource):
             yield item
 
@@ -37,7 +37,7 @@ class StartDatasource(CrawlerMixin, Command):
         parser.add_argument('urls', metavar='URL', nargs='+', help='Start from urls')
 
         subparsers = parser.add_subparsers(title='Valid datasource types')
-        for name, datasource in self.app.articles.datasources.items():
+        for name, datasource in self.app.crawler.datasources.items():
             info = list(datasource.info())
             help = 'Extracts ' + ' and '.join(info)
             if len(info) == 1:
@@ -55,7 +55,6 @@ class StartDatasource(CrawlerMixin, Command):
         datasource = args.datasource_class(None, dataset=None, **args.__dict__)
         for item in self.crawl(args.urls, datasource, datasource):
             print item.encode('utf-8')
-            print '>>'
 
         root_handler.handlers = handlers
 
@@ -71,12 +70,11 @@ class StartDataset(CrawlerMixin, Command):
         root_handler = logging.getLogger('')
         handlers = root_handler.handlers
         root_handler.handlers = []
-        dataset = get_dataset(self.app.articles, args.dataset)
+        dataset = get_dataset(self.app.crawler, args.dataset)
         urls = non_fnmatchers(dataset)
         for datasource, urls in map_datasources(urls, dataset).items():
             for item in self.crawl(urls, datasource):
                 print item.encode('utf-8')
-                print '>>'
 
         root_handler.handlers = handlers
 
@@ -95,9 +93,8 @@ class Restore(Command):
         handlers = root_handler.handlers
         root_handler.handlers = []
 
-        for article in self.app.articles.restore(parsed_args.id):
-            print article.encode('utf-8')
-            print '>>'    
+        for item in self.app.crawler.restore(parsed_args.id):
+            print item.encode('utf-8')
         
         root_handler.handlers = handlers
 
@@ -109,7 +106,7 @@ class RestoreList(Lister):
     def take_action(self, parsed_args):
         l = []
 
-        pending_path = self.app.articles.instance_dir('pending')
+        pending_path = self.app.crawler.instance_dir('pending')
         for pid in os.listdir(pending_path):
             sublist = [pid,]
             pidpath = os.path.join(pending_path, pid)

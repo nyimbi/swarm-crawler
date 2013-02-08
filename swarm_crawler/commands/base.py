@@ -7,7 +7,7 @@ from cliff.show import ShowOne
 class InstanceMixin(object):
     @cached_property
     def instance_dir(self):
-        return self.app.articles.instance_dir('dataset')
+        return self.app.crawler.instance_dir('dataset')
 
     def dataset(self, name):
         return path.join(self.instance_dir, name)

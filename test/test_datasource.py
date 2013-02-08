@@ -1,6 +1,6 @@
 import unittest
 from urlparse import urlparse
-from swarm_articles.dataset.datasource import NoContentDatasource
+from swarm_crawler.dataset.datasource import NoContentDatasource
 from swarm.ext.http.helpers import URL
 
 

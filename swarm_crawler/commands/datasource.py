@@ -1,4 +1,4 @@
-from swarm_articles.dataset import get_dataset
+from swarm_crawler.dataset import get_dataset
 from argparse import ArgumentParser
 from .base import Command, ShowOne, Lister
 
@@ -18,7 +18,7 @@ class CreateDatasource(NamedDatasourceParser, Command):
     def get_parser(self, prog_name):
         parser = super(CreateDatasource, self).get_parser(prog_name)
         subparsers = parser.add_subparsers(title='Valid datasource types')
-        for name, datasource in self.app.articles.datasources.items():
+        for name, datasource in self.app.crawler.datasources.items():
             info = list(datasource.info())
             help = 'Extracts ' + ' and '.join(info)
             if len(info) == 1:
@@ -30,7 +30,7 @@ class CreateDatasource(NamedDatasourceParser, Command):
         return parser
     
     def take_action(self, args):
-        dataset = get_dataset(self.app.articles, args.dataset)
+        dataset = get_dataset(self.app.crawler, args.dataset)
         datasource = unicode(args.datasource)
         if datasource in dataset:
             raise ValueError('Datasource "%s" exists in "%s" dataset')
@@ -48,7 +48,7 @@ class CreateDatasource(NamedDatasourceParser, Command):
 class DeleteDatasource(NamedDatasourceParser, Command):
     """Delete datasource"""
     def take_action(self, args):
-        dataset = get_dataset(self.app.articles, args.dataset)
+        dataset = get_dataset(self.app.crawler, args.dataset)
         datasource = unicode(args.datasource)
         del dataset[datasource]
         dataset.save()

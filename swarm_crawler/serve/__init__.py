@@ -17,7 +17,7 @@ class Config(object):
     SERVER_NAME = 'localhost:5000'
 
 
-static_path = path.join(Environment()['swarm-articles'][0].location,
+static_path = path.join(Environment()['swarm-crawler'][0].location,
                         'static')
 
 web = Flask(__name__, static_folder=static_path)
@@ -64,7 +64,7 @@ web.register_blueprint(editor, url_prefix='/edit')
 def define_datasource_types():
     return {'datasource_types':dict((name, ds.describe()) \
                                     for (name, ds) \
-                                    in web.commands.articles.datasources.items()),
+                                    in web.commands.crawler.datasources.items()),
             'zip':zip,
             'getattr':getattr,
             'hasattr':hasattr,

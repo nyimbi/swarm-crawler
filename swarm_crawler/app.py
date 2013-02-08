@@ -13,7 +13,7 @@ from swarm.config import ConfigAttribute
 from swarm import transport, swarm, define_swarm
 from swarm.ext.http import HtmlSwarm
 from swarm.ext.http.helpers import parser
-from swarm.ext.articles.text import PageText
+from swarm.ext.crawler.text import PageText
 
 def dict_converter(dct):
     d = {}
@@ -21,19 +21,21 @@ def dict_converter(dct):
         d[key] = import_string(dct[key])
     return d
 
-class ArticlesSwarm(HtmlSwarm):
+class CrawlerSwarm(HtmlSwarm):
     default_config = ImmutableDict(HtmlSwarm.default_config,
                      **{'SAVE_STATE':True,
-                        'DATASOURCES': {'no-content':'swarm.ext.articles.dataset.datasource.NoContentDatasource',
-                                        'xpath-content-only':'swarm.ext.articles.dataset.datasource.XpathContentOnlyDatasource',
-                                        'xpath':'swarm.ext.articles.dataset.datasource.XpathDatasource',
-                                        'readable-content-only':'swarm.ext.articles.dataset.datasource.ReadableContentOnlyDatasource',
-                                        'readable':'swarm.ext.articles.dataset.datasource.ReadableDatasource'
-                                        }
+                        'DATASOURCES': {'no-content':'swarm.ext.crawler.dataset.datasource.NoContentDatasource',
+                                        'xpath-content-only':'swarm.ext.crawler.dataset.datasource.XpathContentOnlyDatasource',
+                                        'xpath':'swarm.ext.crawler.dataset.datasource.XpathDatasource',
+                                        'readable-content-only':'swarm.ext.crawler.dataset.datasource.ReadableContentOnlyDatasource',
+                                        'readable':'swarm.ext.crawler.dataset.datasource.ReadableDatasource'
+                                        },
+                        'OUTPUT':{}
                     })
 
     item_class = ConfigAttribute('ITEM_CLASS', get_converter=obj_converter)
     datasources = ConfigAttribute('DATASOURCES', get_converter = dict_converter)
+    output = ConfigAttribute('OUTPUT', get_converter = dict_converter)
 
 FNMATCHER_SUFFIX_LEN = len(translate('')) - 1
 def is_fnmatcher(re_pattern):
@@ -45,7 +47,7 @@ def non_fnmatchers(dataset):
 
 define_swarm.start()
 
-articles = ArticlesSwarm(__name__)
+crawler = CrawlerSwarm(__name__)
 
 def map_to_datasource(url, dataset):
     url = unicode(url)
@@ -78,7 +80,7 @@ def crawl(urls, datasource):
                                datasource.dataset).items():
             crawl(urls, datasource)
 
-@articles.url('/crawl')
+@crawler.url('/crawl')
 def start(urls=[], datasource=None):
     crawl(urls, datasource)
 

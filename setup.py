@@ -16,7 +16,7 @@ def package_env(file_name, strict=False):
     else:
         return ''
 
-PROJECT = 'swarm_articles'
+PROJECT = 'swarm-crawler'
 
 VERSION = package_env('VERSION')
 URL = package_env('URL')
@@ -54,41 +54,42 @@ if __name__ == '__main__':
         author_email=AUTHOR_EMAIL,
         url=URL,
         license=package_env('LICENSE'),
-        packages=['.'.join(('swarm_articles', e)) \
-                    for e in find_packages('swarm_articles')],
+        packages=['swarm_crawler', ] + ['.'.join(('swarm_crawler', e)) \
+                    for e in find_packages('swarm_crawler')],
         package_dir={
-                     'swarm_articles': 'swarm_articles'},
+                     'swarm_crawler': 'swarm_crawler'},
         include_package_data=True,
         zip_safe=False,
         test_suite='test',
         install_requires=[
                          'swarm',
-                         'swarm_http',
+                         'swarm-http',
                          'lxml',
                          'breadability',
                          'cliff',
+                         'datrie',
                          ],
         tests_require=[],
         entry_points={
             'console_scripts': [
-                'articles = swarm_articles.main:main'
+                'crawler = swarm_crawler.main:main'
                 ],
-            'swarm_articles.commands': [
-                'serve = swarm_articles.commands.server:Web',
-                'start_text = swarm_articles.commands.start:StartText',
-                'start = swarm_articles.commands.start:StartDataset',
-                'start_datasource = swarm_articles.commands.start:StartDatasource',
+            'swarm_crawler.commands': [
+                'serve = swarm_crawler.commands.server:Web',
+                'start_text = swarm_crawler.commands.start:StartText',
+                'start = swarm_crawler.commands.start:StartDataset',
+                'start_datasource = swarm_crawler.commands.start:StartDatasource',
 
-                'restore_list = swarm_articles.commands.crawl:RestoreList',
-                'restore = swarm_articles.commands.crawl:Restore',
+                'restore_list = swarm_crawler.commands.crawl:RestoreList',
+                'restore = swarm_crawler.commands.crawl:Restore',
 
-                'dataset_list = swarm_articles.commands.dataset:DatasetList',
-                'dataset_info = swarm_articles.commands.dataset:DatasetInfo',
-                'dataset_delete = swarm_articles.commands.dataset:DeleteDataset',
-                'dataset_backup = swarm_articles.commands.dataset:DatasetBackup',
+                'dataset_list = swarm_crawler.commands.dataset:DatasetList',
+                'dataset_info = swarm_crawler.commands.dataset:DatasetInfo',
+                'dataset_delete = swarm_crawler.commands.dataset:DeleteDataset',
+                'dataset_backup = swarm_crawler.commands.dataset:DatasetBackup',
 
-                'datasource_create = swarm_articles.commands.datasource:CreateDatasource',
-                'datasource_delete = swarm_articles.commands.datasource:DeleteDatasource',
+                'datasource_create = swarm_crawler.commands.datasource:CreateDatasource',
+                'datasource_delete = swarm_crawler.commands.datasource:DeleteDatasource',
                 ],
 
             },

@@ -5,9 +5,9 @@ from string import printable
 from fnmatch import fnmatch, translate
 from pprint import pprint
 
-from swarm_articles.dataset.datasource import NoContentDatasource
-from swarm_articles.dataset.tree import TrieTree
-from swarm_articles.app import map_datasources
+from swarm_crawler.dataset.datasource import NoContentDatasource
+from swarm_crawler.dataset.tree import TrieTree
+from swarm_crawler.app import map_datasources
 from swarm.ext.http.helpers import URL
 
 def urls(*urls):

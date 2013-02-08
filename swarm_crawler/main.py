@@ -44,48 +44,48 @@ class store_int(Action):
     def __call__(self, parser, args, value, option_string=None):
         setattr(args, self.dest, int(value))
 
-class ArticlesApp(App):
+class CrawlerApp(App):
     log = logging.getLogger(__name__)
     def configure_logging(self):
         pass
 
     def __init__(self):
-        super(ArticlesApp, self).__init__(
-            description='articles crawler',
+        super(CrawlerApp, self).__init__(
+            description='swarm crawler',
             version='0.0.1',
-            command_manager=CommandManager('swarm_articles.commands'),
+            command_manager=CommandManager('swarm_crawler.commands'),
             )
 
         self._clean_files = []
 
     def initialize_app(self, argv):
-        from .app import articles
+        from .app import crawler
         #get file config is configured
 
         if self.options.config:
-            articles.config.from_file(self.options.config)
+            crawler.config.from_file(self.options.config)
 
         if self.options.workers:
-            articles.competitors = articles.config['COMPETITORS'] = self.options.workers
+            crawler.competitors = crawler.config['COMPETITORS'] = self.options.workers
 
         #setup logging
         from breadability.logconfig import LOG
 
-        articles.config['DEBUG'] = articles.debug = self.options.debug
+        crawler.config['DEBUG'] = crawler.debug = self.options.debug
 
         #configure signalsets fron args
-        if articles.reloaded_module is None:
-            articles.reloaded_module = ['swarm.ext.http.signal.unique_url',]
-            # articles.reloaded_module = []
+        if crawler.reloaded_module is None:
+            crawler.reloaded_module = ['swarm.ext.http.signal.unique_url',]
+            # crawler.reloaded_module = []
 
         for name, mod in OPT_MODULES.items():
             if getattr(self.options, name):
-                articles.reloaded_module.append(import_string(mod))
+                crawler.reloaded_module.append(import_string(mod))
 
         #setup instance papth
-        articles.instance_path = self.options.instance_path
+        crawler.instance_path = self.options.instance_path
 
-        self.articles = articles
+        self.crawler = crawler
 
     def clean_up(self, cmd, result, err):
         self.clean_files()
@@ -97,7 +97,7 @@ class ArticlesApp(App):
 
 
     def build_option_parser(self, *args, **kwargs):
-        parser = super(ArticlesApp, self).build_option_parser(*args, **kwargs)
+        parser = super(CrawlerApp, self).build_option_parser(*args, **kwargs)
         parser.add_argument(
             '--instance',
             dest='instance_path',
@@ -136,5 +136,5 @@ class ArticlesApp(App):
         return parser
 
 def main(argv=sys.argv[1:]):
-    articles = ArticlesApp()
-    return articles.run(argv)
+    crawler = CrawlerApp()
+    return crawler.run(argv)

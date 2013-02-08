@@ -16,10 +16,10 @@ from flask.ext.introspect import Tree, TreeView, TreeRootView, \
 
 
 
-from swarm.ext.articles.dataset.tree import TrieTree
+from swarm.ext.crawler.dataset.tree import TrieTree
 
-from swarm.ext.articles.dataset.datasource import Datasource, ReadableDatasource
-from swarm.ext.articles.dataset import get_dataset
+from swarm.ext.crawler.dataset.datasource import Datasource, ReadableDatasource
+from swarm.ext.crawler.dataset import get_dataset
 
 from .namedview import NamedMethodView, namedmethod
 
@@ -42,7 +42,7 @@ class DatasetsDict(dict):
     def __init__(self, app):
         self.app = app
         self.dataset_dir = \
-            self.app.commands.articles.instance_dir('dataset')
+            self.app.commands.crawler.instance_dir('dataset')
 
     def keys(self):
         if not hasattr(self, '_keys'):
@@ -90,7 +90,7 @@ class TreeRootView(DictViewMixin, TreeRootView):
         def put(self, tree):
             '''create new dataset'''
 
-            dataset = get_dataset(current_app.commands.articles,
+            dataset = get_dataset(current_app.commands.crawler,
                                   request.values['name'])
             dataset.save()
             return ('tree/children.xml', {})
@@ -123,11 +123,11 @@ class DatasetView(DictViewMixin, TreeView):
 
         def put(self, item):
             '''create new datasource'''
-            dataset = get_dataset(current_app.commands.articles,
+            dataset = get_dataset(current_app.commands.crawler,
                       item.name)
 
             item.obj[request.values['name']] \
-                = current_app.commands.articles\
+                = current_app.commands.crawler\
                   .datasources[request.values['type']](dataset._path)
             item.obj.save(dataset._path)
             return ('tree/children.xml', {})
@@ -139,7 +139,7 @@ class DatasetView(DictViewMixin, TreeView):
             return ('tree/children.xml', {})
 
         def post(self, item):
-            dataset = get_dataset(current_app.commands.articles, item.name)
+            dataset = get_dataset(current_app.commands.crawler, item.name)
             dataset_dir = path.abspath(path.dirname(dataset._path))
             if request.values['copy'] == u'true':
                 op = copy
@@ -147,12 +147,12 @@ class DatasetView(DictViewMixin, TreeView):
                 op = move
             new_path = path.join(dataset_dir, request.values['name'])
             op(dataset._path, path.join(dataset_dir, request.values['name']))
-            dataset = get_dataset(current_app.commands.articles, request.values['name'])
+            dataset = get_dataset(current_app.commands.crawler, request.values['name'])
             for key in dataset.keys():
                 dataset[key]._path = new_path
             dataset.save()
 
-            # g.item.obj = get_dataset(current_app.commands.articles,
+            # g.item.obj = get_dataset(current_app.commands.crawler,
             #                      request.values['name'])
             
 NOTEXTIST = object()
@@ -229,7 +229,7 @@ class DatasourceView(DatasetView):
             # return ('tree/children.xml', {})
 
         def post(self, item):
-            newobj = current_app.commands.articles.\
+            newobj = current_app.commands.crawler.\
                       datasources[request.values['typename']](item.obj.dataset_path)
             for name, value in item.obj.__dict__.items():
                 setattr(newobj, name, value)
