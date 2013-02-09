@@ -2,7 +2,8 @@ include MANIFEST.in
 include README.rst
 include distribute_setup.py
 include setup.py
-graft docs
-graft example
-graft test
-graft static
+recursive-include docs *
+recursive-include example *
+recursive-include test *
+recursive-include static *
+recursive-include swarm_crawler/serve/templates *
