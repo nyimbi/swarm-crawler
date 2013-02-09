@@ -62,12 +62,15 @@ if __name__ == '__main__':
         zip_safe=False,
         test_suite='test',
         install_requires=[
+                         'distribute',
+                         'breadability',
                          'swarm',
                          'swarm-http',
                          'lxml',
-                         'breadability',
                          'cliff',
                          'datrie',
+                         'flask-introspect',
+                         'flask-ample'
                          ],
         tests_require=[],
         entry_points={
