@@ -1,6 +1,7 @@
 import logging
 import sys
 import os
+from importlib import import_module
 from pprint import pprint
 from argparse import Action
 from cliff.command import Command
@@ -8,8 +9,9 @@ from cliff.lister import Lister
 
 from werkzeug.utils import import_string
 
-from swarm.ext.crawler.app import map_datasources, non_fnmatchers
-from swarm.ext.crawler.dataset import get_dataset
+from swarm_crawler.app import map_datasources, non_fnmatchers
+from swarm_crawler.dataset import get_dataset
+from swarm_crawler.output import StdoutOutputHandler
 
 class int_or_float(Action):
     def __call__(self, parser, args, value, option_string=None):
@@ -28,38 +30,29 @@ class CrawlerMixin(object):
                                                 datasource=datasource):
             yield item
 
+class store_output_handler(Action):
+    def __call__(self, parser, args, value, option_string=None):
+        module_path, obj_path = value.split(':')
+        obj = getattr(import_module(module_path), obj_path)
+        if not callable(obj):
+            obj = obj(parser.cmdapp)
+        setattr(args, self.dest, obj)
 
-class StartDatasource(CrawlerMixin, Command):
-    """Start crawl data with defined datasource type"""
+class OutputHandlerCommand(Command):
     def get_parser(self, prog_name):
-        parser = super(StartDatasource, self).get_parser(prog_name)
-
-        parser.add_argument('urls', metavar='URL', nargs='+', help='Start from urls')
-
-        subparsers = parser.add_subparsers(title='Valid datasource types')
-        for name, datasource in self.app.crawler.datasources.items():
-            info = list(datasource.info())
-            help = 'Extracts ' + ' and '.join(info)
-            if len(info) == 1:
-                help += ' only'
-            subparser = subparsers.add_parser(name, help=help)
-            datasource.populate_parser(subparser)
-            subparser.set_defaults(datasource_class=datasource)
-        return parser        
-    
-    def take_action(self, args):
-        root_handler = logging.getLogger('')
-        handlers = root_handler.handlers
-        root_handler.handlers = []
-
-        datasource = args.datasource_class(None, dataset=None, **args.__dict__)
-        for item in self.crawl(args.urls, datasource, datasource):
-            print item.encode('utf-8')
-
-        root_handler.handlers = handlers
+        parser = super(OutputHandlerCommand, self).get_parser(prog_name)
+        parser.cmdapp = self
+        parser.add_argument('-o', '--output',
+                             metavar='OUTPUT',
+                             dest='handle',
+                             required=False,
+                             default=StdoutOutputHandler(self),
+                             action = store_output_handler, 
+                             help = 'function or callable object class path')
+        return parser
 
 
-class StartDataset(CrawlerMixin, Command):
+class StartDataset(CrawlerMixin, OutputHandlerCommand):
     """Start crawl data with named dataset"""
     def get_parser(self, prog_name):
         parser = super(StartDataset, self).get_parser(prog_name)
@@ -74,7 +67,7 @@ class StartDataset(CrawlerMixin, Command):
         urls = non_fnmatchers(dataset)
         for datasource, urls in map_datasources(urls, dataset).items():
             for item in self.crawl(urls, datasource):
-                print item.encode('utf-8')
+                args.handle(item)
 
         root_handler.handlers = handlers
 
