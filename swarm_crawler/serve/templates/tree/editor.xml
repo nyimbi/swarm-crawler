@@ -1,0 +1,8 @@
+<xul:groupbox{% if request.is_xhr %} xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"{% endif %} url="{{url_for('.path', path=g.item.path)}}" id='editor-box'>
+    <xul:caption style='text:bold;' label='{{g.item.name}}'></xul:caption>
+    {%- for name, item in g.item %}
+    {%- if name in g.item.view.editable_fields %}
+        {{item.view.render(name, item)|safe}}
+    {%- endif %}
+    {%- endfor %}
+</xul:groupbox>

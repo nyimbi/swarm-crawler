@@ -1,0 +1,10 @@
+{% extends 'field.xml' %}
+{% block content%}
+<xul:hbox{% if request.is_xhr %} xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"{% endif %} editor='{{url_for('.path', path = view.path)}}'>
+    <xul:label flex='2' value='{{view.name}}' control='{{view.name}}-text'></xul:label>
+    <xul:textbox flex='6' oncommand='if(event.keyIdentifier=="Enter"){ample.edit(this.parentNode).with("PUT", {value:this.getAttribute("value")})}else{this.style.setProperty("background-color", "yellow")}' id='{{view.name}}-text' value='{{view.obj}}'></xul:textbox>
+    {%- if status %}
+    <xul:label flex='1' value='{{status}}'/>
+    {%- endif %}
+</xul:hbox>
+{% endblock %}

@@ -1,0 +1,6 @@
+* xpath datasources
+* output drivers - json, rss, csv
+* testing start from web interface
+* task update
+* docs
+* make help for actual datasources from 'datasource create' available

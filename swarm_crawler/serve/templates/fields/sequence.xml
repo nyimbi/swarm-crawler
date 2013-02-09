@@ -1,0 +1,13 @@
+{% extends 'field.xml' %}
+{% block content%}
+    <xul:hbox flex='1'>
+        <xul:label flex='2' value='{{view.name}}' control='{{view.name}}-sequence'></xul:label>
+        <xul:vbox id='{{view.name}}-sequence' flex='6'>
+        {%- for n, seqitem in enumerate(view.obj) %}
+            <xul:hbox><xul:label value='{{n+1}}.' control='{{view.name}}-text-{{n}}'></xul:label><xul:textbox flex='10' onkeyup='if(event.keyIdentifier=="Enter"){ample.edit(this.parentNode.parentNode.parentNode.parentNode).with("PUT", {value:this.getAttribute("value"), n:"{{n}}"})}else{this.style.setProperty("background-color", "yellow")}' id='{{view.name}}-text-{{n}}' value='{{seqitem}}' {%- if status and status[n] %} style='background-color:{{status[n]}}'{% endif %}/>
+            <xul:button label='&#215;' oncommand='ample.edit(this.parentNode.parentNode.parentNode.parentNode).with("DELETE", {n:"{{n}}"})'></xul:button>
+            </xul:hbox>
+        {%- endfor %}
+            <xul:hbox><xul:label value='{{view.obj|length + 1}}.' control='{{view.name}}-text-{{view.obj|length + 1}}'/><xul:textbox flex='10' onkeyup='if(event.keyIdentifier=="Enter"){ample.edit(this.parentNode.parentNode.parentNode.parentNode).with("PUT", {value:this.getAttribute("value"), n:"{{view.obj|length + 1}}"})}else{this.style.setProperty("background-color", "yellow")}' value='' placeholder='create new...' id='{{view.name}}-text-{{view.obj|length + 1}}'/></xul:hbox>
+        </xul:vbox></xul:hbox>
+{% endblock %}

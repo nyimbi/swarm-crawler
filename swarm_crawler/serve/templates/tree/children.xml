@@ -1,0 +1,2 @@
+{%- import 'macro/tree.html' as tree with context%}
+{{ tree.items(g.item, attributes={'ondblclick':'var treeitem = this;_.map(this.parentNode.tree.selectedItems, function(item){if(item==treeitem){show_editor(treeitem)};})'})}}

@@ -1,0 +1,10 @@
+{% extends 'field.xml' %}
+{% block content%}
+<xul:hbox>
+    <xul:label flex='2' value='{{view.name}}' control='{{view.name}}-checkbox'></xul:label>
+    <xul:checkbox flex='6' onclick='ample.edit(this.parentNode.parentNode).with("PUT")' id='{{view.name}}-checkbox' checked='{{view.obj|lower}}'></xul:checkbox>
+    {%- if status %}
+    <xul:label flex='1' value='{{status}}'/>
+    {%- endif %}
+</xul:hbox>
+{% endblock %}
