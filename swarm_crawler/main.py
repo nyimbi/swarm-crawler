@@ -62,8 +62,9 @@ class CrawlerApp(App):
         from .app import crawler
         #get file config is configured
 
-        if self.options.config:
-            crawler.config.from_file(self.options.config)
+        if self.options.config and os.path.exists(self.options.config):
+            crawler.config.root_path = '.'
+            crawler.config.from_pyfile(self.options.config)
 
         if self.options.workers:
             crawler.competitors = crawler.config['COMPETITORS'] = self.options.workers
@@ -119,7 +120,7 @@ class CrawlerApp(App):
 
         parser.add_argument(
             '--config',
-            default=None,
+            default='swarm_config.py',
             action='store',
             help='Specify config file',
             )
