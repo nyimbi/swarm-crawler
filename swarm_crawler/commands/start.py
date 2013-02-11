@@ -2,6 +2,7 @@ import logging
 import sys
 import os
 import imp
+from copy import copy
 from pprint import pprint
 from inspect import isfunction
 from argparse import Action
@@ -13,6 +14,7 @@ from werkzeug.utils import import_string
 from swarm_crawler.app import map_datasources, non_fnmatchers
 from swarm_crawler.dataset import get_dataset
 from swarm_crawler.output import StdoutOutputHandler
+from swarm_crawler.helpers import included_local_path
 
 class int_or_float(Action):
     def __call__(self, parser, args, value, option_string=None):
@@ -32,14 +34,15 @@ class CrawlerMixin(object):
             yield item
 
 def get_handler_obj(value, cmdapp):
-    module_path, obj_path = value.split(':')
-    f, filename, desc = imp.find_module(module_path, ['.'])
-    module = imp.load_module(module_path, f, filename, desc)
-    obj = getattr(module, obj_path)
-    if not isfunction(obj):
-        obj = obj(cmdapp)
+    with included_local_path():
+        module_path, obj_path = value.split(':')
+        f, filename, desc = imp.find_module(module_path, ['.'])
+        module = imp.load_module(module_path, f, filename, desc)
+        obj = getattr(module, obj_path)
+        if not isfunction(obj):
+            obj = obj(cmdapp)
 
-    return obj
+        return obj
 
 class store_output_handler(Action):
     def __call__(self, parser, args, value, option_string=None):
