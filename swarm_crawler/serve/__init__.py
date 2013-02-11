@@ -1,5 +1,4 @@
 from os import path
-from pkg_resources import Environment
 from pprint import pprint
 from collections import Sequence
 from itertools import chain
@@ -16,11 +15,7 @@ class Config(object):
     DEFAULT_DATASOURCE_TYPE = 'readable'
     SERVER_NAME = 'localhost:5000'
 
-
-static_path = path.join(Environment()['swarm-crawler'][0].location,
-                        'static')
-
-web = Flask(__name__, static_folder=static_path)
+web = Flask(__name__)
 
 web.config.from_object(Config)
 AmpleMarkup(web)
