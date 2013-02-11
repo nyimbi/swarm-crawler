@@ -15,9 +15,12 @@ from .tree import TrieTree as Tree
 class DescribedMixin(object):
     @classmethod
     def info(cls):
+        if cls.__doc__:
+            yield cls.__doc__
         for base in cls.__bases__:
-            if issubclass(base, DescribedMixin) and base.__doc__:
-                yield base.__doc__
+            if issubclass(base, DescribedMixin):
+                for info in base.info():
+                    yield info
 
     @classmethod
     def describe(cls):
