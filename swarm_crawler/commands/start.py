@@ -1,8 +1,10 @@
 import logging
 import sys
 import os
-from importlib import import_module
+import imp
+from copy import copy
 from pprint import pprint
+from inspect import isfunction
 from argparse import Action
 from cliff.command import Command
 from cliff.lister import Lister
@@ -12,6 +14,7 @@ from werkzeug.utils import import_string
 from swarm_crawler.app import map_datasources, non_fnmatchers
 from swarm_crawler.dataset import get_dataset
 from swarm_crawler.output import StdoutOutputHandler
+from swarm_crawler.helpers import included_local_path
 
 class int_or_float(Action):
     def __call__(self, parser, args, value, option_string=None):
@@ -30,22 +33,31 @@ class CrawlerMixin(object):
                                                 datasource=datasource):
             yield item
 
+def get_handler_obj(value, cmdapp):
+    with included_local_path():
+        module_path, obj_path = value.split(':')
+        f, filename, desc = imp.find_module(module_path, ['.'])
+        module = imp.load_module(module_path, f, filename, desc)
+        obj = getattr(module, obj_path)
+        if not isfunction(obj):
+            obj = obj(cmdapp)
+
+        return obj
+
 class store_output_handler(Action):
     def __call__(self, parser, args, value, option_string=None):
-        module_path, obj_path = value.split(':')
-        obj = getattr(import_module(module_path), obj_path)
-        if not callable(obj):
-            obj = obj(parser.cmdapp)
-        setattr(args, self.dest, obj)
+        setattr(args, self.dest, get_handler_obj(value, parser.cmdapp))
+        
+
 
 class OutputHandlerCommand(Command):
-    def get_parser(self, prog_name):
+    def get_parser(self, prog_name): 
         parser = super(OutputHandlerCommand, self).get_parser(prog_name)
         parser.cmdapp = self
         parser.add_argument('-o', '--output',
                              metavar='OUTPUT',
                              dest='handle',
-                             required=False,
+
                              default=StdoutOutputHandler(self),
                              action = store_output_handler, 
                              help = 'function or callable object class path')
@@ -60,9 +72,13 @@ class StartDataset(CrawlerMixin, OutputHandlerCommand):
         return parser
 
     def take_action(self, args):
+        if isinstance(args.handle, basestring):
+            args.handle = get_handler_obj(value, args.handle)
+        
         root_handler = logging.getLogger('')
         handlers = root_handler.handlers
         root_handler.handlers = []
+        
         dataset = get_dataset(self.app.crawler, args.dataset)
         urls = non_fnmatchers(dataset)
         for datasource, urls in map_datasources(urls, dataset).items():

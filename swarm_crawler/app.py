@@ -1,6 +1,6 @@
 import logging
-from pprint import pprint
-from urlparse import urlparse, urlunparse
+from copy import copy
+import sys
 import re
 from fnmatch import fnmatch, translate
 from collections import defaultdict
@@ -14,12 +14,14 @@ from swarm import transport, swarm, define_swarm
 from swarm.ext.http import HtmlSwarm
 from swarm.ext.http.helpers import parser
 from swarm.ext.crawler.text import PageText
+from swarm.ext.crawler.helpers import included_local_path
 
 def dict_converter(dct):
-    d = {}
-    for key in dct:
-        d[key] = import_string(dct[key])
-    return d
+    with included_local_path():
+        d = {}
+        for key in dct:
+            d[key] = import_string(dct[key])
+        return d
 
 class CrawlerSwarm(HtmlSwarm):
     default_config = ImmutableDict(HtmlSwarm.default_config,

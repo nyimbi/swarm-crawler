@@ -1,4 +1,7 @@
 class OutputHandler(object):
+    '''
+    Output handler is a class of handler object or function
+    '''
     def __init__(self, cmdapp):
         self.cmdapp = cmdapp
     

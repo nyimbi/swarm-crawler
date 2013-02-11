@@ -20,6 +20,7 @@ from swarm.ext.crawler.dataset.tree import TrieTree
 
 from swarm.ext.crawler.dataset.datasource import Datasource, ReadableDatasource
 from swarm.ext.crawler.dataset import get_dataset
+from swarm.ext.crawler.helpers import included_local_path
 
 from .namedview import NamedMethodView, namedmethod
 
@@ -55,9 +56,10 @@ class DatasetsDict(dict):
 
     def __getitem__(self, name):
         if not dict.__contains__(self, name):
-            dict.__setitem__(self, name,
-                             TrieTree.load(path.join(self.dataset_dir,
-                             name)))
+            with included_local_path():
+                dict.__setitem__(self, name,
+                                 TrieTree.load(path.join(self.dataset_dir,
+                                 name)))
         return dict.__getitem__(self, name)
 
 

@@ -5,5 +5,6 @@ include setup.py
 recursive-include docs *
 recursive-include example *
 recursive-include test *
-recursive-include static *
+
 recursive-include swarm_crawler/serve/templates *
+recursive-include swarm_crawler/serve/static *
